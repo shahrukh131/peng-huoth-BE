@@ -8,16 +8,17 @@ const {
   getPaginatedData,
 } = require("../utils/GenericMethods");
 
-// const save = async (req, res) => {
-//   //* Saves occupation into the database.
-//   const { title, author, description } = req.body;
-//   try {
-//     const data = await createData(Book, { title, author, description });
-//     sendSuccess(res, 200, "Successfully Created", data);
-//   } catch (error) {
-//     sendError(res, 500, error.message);
-//   }
-// };
+
+const save = async (req, res) => {
+  //* Saves occupation into the database.
+  const { name, description } = req.body;
+  try {
+    const data = await createData(Occupation, { name, description });
+    sendResponse(res, 201, data);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
 
 const findAllOccupations = async (req, res) => {
   //* Fetch all occupations from occupations table
@@ -80,7 +81,7 @@ const findAllOccupations = async (req, res) => {
 // };
 
 module.exports = {
-//   save,
+  save,
   findAllOccupations,
 //   updateBook,
 //   deleteBook,

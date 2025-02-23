@@ -1,5 +1,5 @@
 // Import the sendResponse function from another file
-const { sendResponse } = require('@utils/sendResponse.js');
+const  sendResponse  = require('@utils/sendResponse.js');
 const logger = require('../utils/logger');
 
 /**
