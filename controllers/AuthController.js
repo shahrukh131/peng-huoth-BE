@@ -42,13 +42,14 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
     const token = jwt.sign(
-      { id: user.id, email: user.email, staffId: user.staffId },
+      { id: user.id, email: user.email, staff_id: user.staff_id,staff_name:user.staff_name },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    sendResponse(res, 200, { token,user }, null, "User logged in successfully");
+    sendResponse(res, 200, { token }, null, "User logged in successfully");
   } catch (error) {
     sendResponse(res, 400, null, error.message);
   }
 };
+
 module.exports = { register, login };

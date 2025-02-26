@@ -7,6 +7,7 @@ const {
   deletedData,
   getPaginatedData,
 } = require("../utils/GenericMethods");
+const { generateHashedPassword } = require("../utils/GenerateHash");
 
 // const save = async (req, res) => {
 //   //* Saves occupation into the database.
@@ -65,12 +66,29 @@ const findUserByStaffId = async (req, res) => {
 const updateUser = async (req, res) => {
   //*Update User BY ID
   try {
-    const id = req.params.id;
-    const { staff_name, password } = req.body;
-    const data = await updatedData(User, { id: id },  { staff_name,  password });
-    sendResponse(res, 200, data, null, "successfully updated!");
+    const { id } = req.params;
+    let { staff_name, password } = req.body;
+    let updateFields = { staff_name };
+
+    // Hash password only if it's provided
+    if (password) {
+      updateFields.password = await generateHashedPassword(password);
+    }
+
+    
+
+    // Update user record in DB
+    const data = await updatedData(User, { id }, updateFields);
+
+    // Handle case when user is not found
+    if (!data) {
+      return sendResponse(res, 404, null, "User not found.");
+    }
+
+    return sendResponse(res, 200, data, null, "Successfully updated!");
   } catch (error) {
-    sendResponse(res, 400, null, error);
+    console.error("Update User Error:", error);
+    return sendResponse(res, 500, null, "Failed to update user.");
   }
 };
 
