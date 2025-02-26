@@ -1,5 +1,5 @@
 const { Occupation } = require("@models");
-const  sendResponse  = require("@utils/sendResponse");
+const sendResponse = require("@utils/sendResponse");
 const {
   getData,
   createData,
@@ -7,7 +7,6 @@ const {
   deletedData,
   getPaginatedData,
 } = require("../utils/GenericMethods");
-
 
 const save = async (req, res) => {
   //* Saves occupation into the database.
@@ -42,49 +41,50 @@ const findAllOccupations = async (req, res) => {
 //     sendError(res, 404, error.message);
 //   }
 // };
-// const findBookById = async (req, res) => {
-//   //* Fetch specific book from BOOKS table
-//   try {
-//     const id = req.params.id;
-//     const data = await getData(Book, { id: id });
-//     sendSuccess(res, 200, "Successfully Fetched", data);
-//   } catch (error) {
-//     sendError(res, 404, error.message);
-//   }
-// };
+const findOccupationById = async (req, res) => {
+  //* Fetch specific book from BOOKS table
+  try {
+    const id = req.params.id;
+    const data = await getData(Occupation, { id: id });
+    sendResponse(res, 200, data);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
 
-// const updateBook = async (req, res) => {
-//   //*Update Book BY ID
-//   try {
-//     const id = req.params.id;
-//     const { title, author, description } = req.body;
-//     const data = await updatedData(
-//       Book,
-//       { id: id },
-//       { title, author, description }
-//     );
-//     sendSuccess(res, 200, "successfully updated!");
-//   } catch (error) {
-//     sendError(res, 404, error.message);
-//   }
-// };
+const updateOccupation = async (req, res) => {
+  //*Update Ocupation BY ID
+  try {
+    const id = req.params.id;
+    const { title, description } = req.body;
+    const data = await updatedData(
+      Occupation,
+      { id: id },
+      { title,  description }
+    );
+    sendResponse(res, 200, data,null, "successfully updated!");
 
-// const deleteBook = async (req, res) => {
-//   //*Delete Book By ID
-//   try {
-//     const id = req.params.id;
-//     const data = await deletedData(Book, { id: id });
-//     sendSuccess(res, 200, "successfully Deleted!");
-//   } catch (error) {
-//     sendError(res, 404, error.message);
-//   }
-// };
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
+
+const deleteOccupation = async (req, res) => {
+  //*Delete Ocupation By ID
+  try {
+    const id = req.params.id;
+    const data = await deletedData(Occupation, { id: id });
+    sendResponse(res, 200, data,null, "successfully updated!");
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
 
 module.exports = {
   save,
   findAllOccupations,
-//   updateBook,
-//   deleteBook,
-//   findBookById,
-//   findAllPaginatedBooks,
+  updateOccupation,
+  deleteOccupation,
+  findOccupationById,
+  //   findAllPaginatedBooks,
 };
