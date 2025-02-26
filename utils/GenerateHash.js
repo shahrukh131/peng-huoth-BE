@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 
+
 const generateHashedPassword =async(password)=>{
     const saltRounds = 10; // Number of salt rounds for bcrypt
 

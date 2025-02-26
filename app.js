@@ -13,6 +13,7 @@ const dbConfig = require("./config/config.js");
 const logger = require("@utils/logger");
 // import routes middleware
 const routes = require("./routes");
+const authMiddleware = require("./middlewares/authMiddleware.js");
 
 
 let corsOptions = {
@@ -57,14 +58,19 @@ app.use(cookieParser());
 app.use("/api", routes);
 
 const PORT = process.env.PORT || 8000;
-
+app.get('/api/protected',authMiddleware, (req, res) => {
+  res.json({ message: 'This is a protected route', user: req.user });
+});
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Peng Huoth Application" });
 });
 
 
+
+
 app.use(globalErrorHandler);
 app.use(notFoundMiddleware);
+
 
 app.listen(PORT, () => {
   logger.info(`Server running at PORT ${PORT}`)

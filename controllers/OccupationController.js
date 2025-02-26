@@ -15,7 +15,7 @@ const save = async (req, res) => {
     const data = await createData(Occupation, { name, description });
     sendResponse(res, 201, data);
   } catch (error) {
-    sendResponse(res, 404, null, error.message);
+    sendResponse(res, 400, null, error);
   }
 };
 
@@ -74,7 +74,7 @@ const deleteOccupation = async (req, res) => {
   try {
     const id = req.params.id;
     const data = await deletedData(Occupation, { id: id });
-    sendResponse(res, 200, data,null, "successfully updated!");
+    sendResponse(res, 200, data,null, "successfully deleted!");
   } catch (error) {
     sendResponse(res, 404, null, error.message);
   }
