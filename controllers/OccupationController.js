@@ -7,7 +7,6 @@ const {
   deletedData,
   getPaginatedData,
 } = require("../utils/GenericMethods");
-const { Sequelize } = require("sequelize");
 
 const save = async (req, res) => {
   //* Saves occupation into the database.
@@ -16,17 +15,7 @@ const save = async (req, res) => {
     const data = await createData(Occupation, { name, description });
     sendResponse(res, 201, data);
   } catch (error) {
-    if (error instanceof Sequelize.UniqueConstraintError) {
-      //* Handle duplicate username error
-      return sendResponse(
-        res,
-        403,
-        null,
-        error.message,
-        "Occupation Name already exists"
-      );
-    }
-    sendResponse(res, 404, null, error.message);
+    sendResponse(res, 400, null, error);
   }
 };
 
@@ -53,7 +42,7 @@ const findAllOccupations = async (req, res) => {
 //   }
 // };
 const findOccupationById = async (req, res) => {
-  //* Fetch specific occupation from Occupations table
+  //* Fetch specific book from BOOKS table
   try {
     const id = req.params.id;
     const data = await getData(Occupation, { id: id });
@@ -64,27 +53,28 @@ const findOccupationById = async (req, res) => {
 };
 
 const updateOccupation = async (req, res) => {
-  //*Update Occupation BY ID
+  //*Update Ocupation BY ID
   try {
     const id = req.params.id;
-    const { name,description } = req.body;
+    const { title, description } = req.body;
     const data = await updatedData(
       Occupation,
       { id: id },
-      { name,description }
+      { title,  description }
     );
-     sendResponse(res, 200, data,null,'Data Updated Successfully');
+    sendResponse(res, 200, data,null, "successfully updated!");
+
   } catch (error) {
     sendResponse(res, 404, null, error.message);
   }
 };
 
 const deleteOccupation = async (req, res) => {
-  //*Delete Occupation By ID
+  //*Delete Ocupation By ID
   try {
     const id = req.params.id;
     const data = await deletedData(Occupation, { id: id });
-    sendResponse(res, 200, data,null,'Data Deleted Successfully');
+    sendResponse(res, 200, data,null, "successfully deleted!");
   } catch (error) {
     sendResponse(res, 404, null, error.message);
   }

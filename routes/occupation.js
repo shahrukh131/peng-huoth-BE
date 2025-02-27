@@ -1,7 +1,6 @@
 const express = require("express");
 const {
   save,
-  findAllBooks,
   findAllOccupations,
   findOccupationById,
   updateOccupation,
@@ -12,14 +11,7 @@ const occupationSchema = require("../validations/occupation");
 const route = express.Router();
 
 // Occupations Routes
-route
-  .route("/")
-  .get(findAllOccupations)
-  .post(validateSchema(occupationSchema), save);
-route
-  .route("/:id")
-  .put(updateOccupation)
-  .get(findOccupationById)
-  .delete(deleteOccupation);
+route.route("/").get(findAllOccupations).post( validateSchema(occupationSchema),save);
+route.route("/:id").put(updateOccupation).get(findOccupationById).delete(deleteOccupation)
 
 module.exports = route;
