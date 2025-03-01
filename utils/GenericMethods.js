@@ -1,3 +1,10 @@
+
+const createData = async (modelName, data) => {
+  const res = await modelName.create(data);
+  return res;
+};
+
+
 const getData = async (modelName, filter, includes) => {
     const data = await modelName.findAll({
       where: filter ? filter : null,
@@ -14,10 +21,7 @@ const getData = async (modelName, filter, includes) => {
     return data;
   };
   
-  const createData = async (modelName, data) => {
-    const res = await modelName.create(data);
-    return res;
-  };
+
   
   const updatedData = async (modelName, filter, newData) => {
     const res = await modelName.update(newData, {

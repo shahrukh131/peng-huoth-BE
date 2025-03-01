@@ -24,12 +24,17 @@ const sequelize = new Sequelize(
   dbConfig.development.database,
   dbConfig.development.username,
   dbConfig.development.password,
+  
   {
     host: dbConfig.development.host,
+    port: dbConfig.development.port,
     dialect: dbConfig.development.dialect,
     logging: false, // Optional: Disable logging of SQL queries
   }
 );
+
+console.log(dbConfig.development.host, dbConfig.development.password,dbConfig.development.database);
+
 
 /**
  ** Check the database connection
