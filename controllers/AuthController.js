@@ -60,7 +60,7 @@ const login = async (req, res) => {
 };
 
 const initiateRegister = async (req, res) => {
-  const { name, email, phoneNumber } = req.body;
+  const {staff_id, staff_name, email, phoneNumber } = req.body;
 
   try {
     let user = await User.findOne({ where: { email } });
@@ -71,7 +71,8 @@ const initiateRegister = async (req, res) => {
       }
     } else {
       user = await User.create({
-        name,
+        staff_id,
+        staff_name,
         email,
         phoneNumber,
       });
@@ -116,6 +117,8 @@ const verifyOTP = async (req, res) => {
     }
 
     user.isRegistered = true;
+    user.isPhoneVerfied = true;
+    user.otp = null; // Clear OTP after successful verification
     await user.save();
 
     sendResponse(res, 200, null, null, "OTP verified successfully");
@@ -130,10 +133,20 @@ const completeRegistration = async (req, res) => {
 
     const user = await User.findOne({ where: { email } }); 
 
+    const hashedPassword = await generateHashedPassword(password);
+
+    user.password = hashedPassword;
+    user.isRegistered = true;
+    user.isPhoneVerfied = true;
+    user.otp = null; // Clear OTP after successful registration
+    user.otpExpiry = null;
+    await user.save();
+    sendResponse(res, 200, user, null, "User registered successfully");
+
     
   } catch (error) {
-    
+    sendResponse(res, 500, null, error.message);
   }
 }
 
-module.exports = { register, login, initiateRegister,verifyOTP };
+module.exports = { register, login, initiateRegister,verifyOTP,completeRegistration };
