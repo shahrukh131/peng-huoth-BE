@@ -28,6 +28,18 @@ module.exports = {
         unique: true,
         allowNull: false
       },
+      otp: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      otpExpiry: {
+        type: Sequelize.DATE,
+        allowNull: true
+      },
+      isRegistered: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
       isPhoneVerfied: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,

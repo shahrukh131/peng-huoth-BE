@@ -57,6 +57,18 @@ module.exports = (sequelize, DataTypes) => {
         },
       }
     },
+    otp: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    otpExpiry: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    isRegistered: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
     isPhoneVerfied: DataTypes.BOOLEAN
   }, {
     sequelize,

@@ -35,15 +35,9 @@ function sendResponse(
     message: message,
   };
 
-  
-
   if (data) {
     response.data = data;
-  } 
-
- 
-  
-
+  }
   if (error) {
     // Handle Sequelize validation errors separately
     if (
@@ -57,6 +51,11 @@ function sendResponse(
         field: err.path,
         message: err.message,
       }));
+    } else if (error.name === "ValidationError") {
+      statusCode = 422;
+      response.success = false;
+      response.message = "Validation error";
+      response.errors = error.errors; // Joi errors are already formatted
     } else {
       response.error = error.message || error;
     }

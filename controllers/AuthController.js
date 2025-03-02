@@ -5,6 +5,8 @@ const { generateHashedPassword } = require("../utils/GenerateHash");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userSchema = require("../validations/user");
+const Joi = require("joi");
+const { generateOTPExpiry, generateOTP } = require("../utils/generateOTP");
 const register = async (req, res) => {
   //* Saves User into the database.
 
@@ -42,7 +44,12 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
     const token = jwt.sign(
-      { id: user.id, email: user.email, staff_id: user.staff_id,staff_name:user.staff_name },
+      {
+        id: user.id,
+        email: user.email,
+        staff_id: user.staff_id,
+        staff_name: user.staff_name,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -52,4 +59,38 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const initiateRegister = async (req, res) => {
+  const { name, email, phoneNumber } = req.body;
+
+  try {
+    // Check if user already exists
+    let user = await User.findOne({ where: { email } });
+
+    if (user) {
+      if (user.isRegistered) {
+        return sendResponse(res, 400, null, "User already registered");
+      }
+    } else {
+      // Create new user
+      user = await User.create({
+        name,
+        email,
+        phoneNumber,
+      });
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = generateOTPExpiry();
+
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+
+    await user.save();
+
+    sendResponse(res, 200, { otp, otpExpiry }, null, "OTP sent successfully");
+  } catch (error) {
+    sendResponse(res, 500, null, error.message);
+  }
+};
+
+module.exports = { register, login, initiateRegister };

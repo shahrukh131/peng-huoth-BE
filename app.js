@@ -14,6 +14,7 @@ const logger = require("@utils/logger");
 // import routes middleware
 const routes = require("./routes");
 const authMiddleware = require("./middlewares/authMiddleware.js");
+const  generateOTP  = require("./utils/generateOTP.js");
 
 
 let corsOptions = {
@@ -33,7 +34,9 @@ const sequelize = new Sequelize(
   }
 );
 
-console.log(dbConfig.development.host, dbConfig.development.password,dbConfig.development.database);
+
+
+
 
 
 /**
