@@ -63,7 +63,6 @@ const initiateRegister = async (req, res) => {
   const { name, email, phoneNumber } = req.body;
 
   try {
-    // Check if user already exists
     let user = await User.findOne({ where: { email } });
 
     if (user) {
@@ -71,7 +70,6 @@ const initiateRegister = async (req, res) => {
         return sendResponse(res, 400, null, "User already registered");
       }
     } else {
-      // Create new user
       user = await User.create({
         name,
         email,
@@ -79,6 +77,8 @@ const initiateRegister = async (req, res) => {
       });
     }
 
+
+    // Generate OTP and its expiry time
     const otp = generateOTP();
     const otpExpiry = generateOTPExpiry();
 
@@ -87,10 +87,53 @@ const initiateRegister = async (req, res) => {
 
     await user.save();
 
-    sendResponse(res, 200, { otp, otpExpiry }, null, "OTP sent successfully");
+    sendResponse(res, 200, { otp, otpExpiry }, null, "OTP Sent Successfully");
   } catch (error) {
     sendResponse(res, 500, null, error.message);
   }
 };
 
-module.exports = { register, login, initiateRegister };
+const verifyOTP = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { email } });
+
+    if (!email || !otp) {
+      sendResponse(res, 400, null, "User ID and OTP are required");
+    }
+
+    if (!user) {
+      return sendResponse(res, 404, null, "User not found");
+    }
+
+    if (user.otp !== otp) {
+      return sendResponse(res, 400, null, "Invalid OTP");
+    }
+
+    if (user.otpExpiry < Date.now()) { // Check if OTP has expired
+      return sendResponse(res, 400, null, "OTP has expired");
+    }
+
+    user.isRegistered = true;
+    await user.save();
+
+    sendResponse(res, 200, null, null, "OTP verified successfully");
+  } catch (error) {
+    sendResponse(res, 500, null, error.message);
+  }
+}
+
+const completeRegistration = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ where: { email } }); 
+
+    
+  } catch (error) {
+    
+  }
+}
+
+module.exports = { register, login, initiateRegister,verifyOTP };
