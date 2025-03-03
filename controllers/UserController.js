@@ -6,8 +6,10 @@ const {
   updatedData,
   deletedData,
   getPaginatedData,
+  generateExcel,
 } = require("../utils/GenericMethods");
 const { generateHashedPassword } = require("../utils/GenerateHash");
+const { logger } = require("sequelize/lib/utils/logger");
 
 // const save = async (req, res) => {
 //   //* Saves occupation into the database.
@@ -75,8 +77,6 @@ const updateUser = async (req, res) => {
       updateFields.password = await generateHashedPassword(password);
     }
 
-    
-
     // Update user record in DB
     const data = await updatedData(User, { id }, updateFields);
 
@@ -103,6 +103,35 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const exportUser = async (req, res) => {
+  try {
+    const users = await getData(User);
+    // Define columns (optional)
+    const columns = [
+      { header: "ID", key: "id" },
+      { header: "StaffID", key: "staff_id" },
+      { header: "Staff Name", key: "staff_name" },
+      { header: "Email", key: "email" },
+    ];
+   const data = await generateExcel(
+      {
+        data: users,
+        columns: columns,
+        sheetName: "User List",
+        fileName: "users-export",
+        styling: {
+          headerColor: "FF4472C4", // Hex color code
+        },
+      },
+      res
+    );
+    
+    sendResponse(res, 200, data, null, "Successfully exported!");
+  } catch (error) {
+    sendResponse(res, 400, null, error.message);
+  }
+};
+
 module.exports = {
   findAllUsers,
   updateUser,
@@ -110,4 +139,5 @@ module.exports = {
   findUserById,
   findUserByStaffId,
   findAllPaginatedUsers,
+  exportUser,
 };
