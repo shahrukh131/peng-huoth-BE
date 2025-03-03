@@ -56,13 +56,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve the 'downloads' directory as static
+//* Serve the 'downloads' directory as static
 app.use(
   "/downloads",
   express.static(path.join(__dirname, "public", "downloads"))
 );
 
-// use routes middleware
+//* use routes middleware
 app.use("/api", routes);
 
 const PORT = process.env.PORT || 8000;
