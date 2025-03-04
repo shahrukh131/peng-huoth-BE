@@ -69,7 +69,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-    isPhoneVerfied: DataTypes.BOOLEAN
+    isPhoneVerfied: DataTypes.BOOLEAN,
+    profile_image: {
+      type: DataTypes.STRING,
+      allowNull: true
+    }
   }, {
     sequelize,
     modelName: 'User',

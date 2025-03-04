@@ -1,4 +1,5 @@
 const { User } = require("@models");
+const path = require("path");
 const sendResponse = require("@utils/sendResponse");
 const {
   getData,
@@ -7,9 +8,11 @@ const {
   deletedData,
   getPaginatedData,
   generateExcel,
+  handleFileUpload,
 } = require("../utils/GenericMethods");
 const { generateHashedPassword } = require("../utils/GenerateHash");
-const { logger } = require("sequelize/lib/utils/logger");
+const { removeOldProfileImage } = require("../utils/upload");
+
 
 // const save = async (req, res) => {
 //   //* Saves occupation into the database.
@@ -72,10 +75,38 @@ const updateUser = async (req, res) => {
     let { staff_name, password } = req.body;
     let updateFields = { staff_name };
 
+
+     // Get current user data to find old profile image
+     const currentUser = await getData(User, { id });
+    
+     if (!currentUser || currentUser.length === 0) {
+       return sendResponse(res, 400, null, "User not found.");
+     }
+    //  console.log(currentUser[0].profile_image);
+     
+
     // Hash password only if it's provided
     if (password) {
       updateFields.password = await generateHashedPassword(password);
     }
+
+    // Handle profile image upload
+    if (req.file) {
+      // Remove old profile image if exists
+      if (currentUser[0]?.profile_image) {
+        const oldImagePath = path.join(__dirname, '..', 'public', currentUser[0].profile_image);
+        removeOldProfileImage(oldImagePath);
+      }
+      const fileData = await handleFileUpload(req.file);
+      if (fileData && !fileData.error) {
+        updateFields.profile_image = fileData.path;
+      } else {
+        return sendResponse(res, 400, null, "Failed to upload profile image");
+      }
+    }
+
+   
+    
 
     // Update user record in DB
     const data = await updatedData(User, { id }, updateFields);

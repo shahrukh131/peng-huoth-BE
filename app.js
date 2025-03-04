@@ -57,6 +57,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 //* Serve the 'downloads' directory as static
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(
   "/downloads",
   express.static(path.join(__dirname, "public", "downloads"))

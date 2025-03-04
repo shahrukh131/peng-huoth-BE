@@ -2,7 +2,7 @@ const { logger } = require("sequelize/lib/utils/logger");
 const ExcelJS = require("exceljs");
 const path = require("path");
 const fs = require("fs");
-const { send } = require("process");
+
 
 const createData = async (modelName, data) => {
   const res = await modelName.create(data);
@@ -59,6 +59,16 @@ const createBulkData = async (modelName, dataArray, options = {}) => {
   }
 };
 
+/**
+ * The function `generateExcel` creates an Excel file with provided data, columns, and styling, and
+ * saves it to a specified directory for download.
+ * @param res - The `res` parameter in the `generateExcel` function is typically used to send the
+ * generated Excel file back as a response in a web application. It is commonly used in server-side
+ * applications to send the file to the client for download.
+ * @returns The function `generateExcel` is returning a download link for the generated Excel file. The
+ * download link is constructed using the file name provided in the function parameters and the base
+ * URL `http://localhost:8000/downloads/`.
+ */
 const generateExcel = async (
   {
     data = [],
@@ -133,6 +143,72 @@ const generateExcel = async (
   }
 };
 
+
+
+const handleFileUpload = async(files)=>{
+  try {
+    if (!files || Object.keys(files).length === 0) {
+      return { error: "No files were uploaded." };
+    }
+     // Create uploads directory if it doesn't exist
+     const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
+     if (!fs.existsSync(uploadDir)) {
+       fs.mkdirSync(uploadDir, { recursive: true });
+     }
+
+     const processFile = (file) => {
+      const originalName = file.originalname;
+      const ext = path.extname(originalName);
+      const nameWithoutExt = path.basename(originalName, ext);
+      
+      // Check if file exists and append timestamp if needed
+      let finalFilename = originalName;
+      if (fs.existsSync(path.join(uploadDir, originalName))) {
+        finalFilename = `${nameWithoutExt}-${Date.now()}${ext}`;
+      }
+
+      // Move file to uploads directory
+      const finalPath = path.join(uploadDir, finalFilename);
+      fs.renameSync(file.path, finalPath);
+
+      return {
+        filename: finalFilename,
+        path: `/uploads/${finalFilename}`,
+        size: file.size,
+        mimetype: file.mimetype
+      };
+    };
+    if (Array.isArray(files)) {
+      return files.map(processFile);
+          
+    }else{
+      return processFile(files);
+    }
+    
+  } catch (error) {
+    console.error('Error handling file upload:', error);
+    throw error;
+  }
+}
+
+const createDataWithFiles = async (modelName, data, files) => {
+  try {
+    // Handle File Upload FIrst
+    const fileData = await modelName.handleFileUpload(files);
+    // Merge data with fileData
+    const mergedData = { ...data,  files: fileData};
+    // Create record with db
+    const result = await modelName.create(mergedData);
+    return result;
+  } catch (error) {
+    console.error("Error in createDataWithFiles:", error);
+    throw error;
+  }
+};
+
+
+
+
 module.exports = {
   getData,
   createData,
@@ -141,4 +217,6 @@ module.exports = {
   getPaginatedData,
   createBulkData,
   generateExcel,
+  handleFileUpload,
+  createDataWithFiles
 };
