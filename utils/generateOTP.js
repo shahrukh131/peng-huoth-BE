@@ -7,10 +7,10 @@ const generateOTP = (length = 6) => {
     return otp;
 };
 
-const generateOTPExpiry = (expiryMinutes = 10) => {
+const generateOTPExpiry = (expiryMinutes = 1) => {
     const otpExpiry = new Date();
     otpExpiry.setMinutes(otpExpiry.getMinutes() + expiryMinutes);
-    return otpExpiry;
+    return otpExpiry.getTime();;
 };
 
 module.exports = {generateOTP, generateOTPExpiry};

@@ -2,6 +2,7 @@ const express = require("express");
 const {
   save,
   findAllPaginatedUsers,
+  findAllUsers,
   findUserById,
   updateUser,
   deleteUser,

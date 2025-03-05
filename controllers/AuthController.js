@@ -70,6 +70,10 @@ const initiateRegister = async (req, res) => {
       if (user.isRegistered) {
         return sendResponse(res, 400, null, "User already registered");
       }
+      const currentTime = Date.now();
+      if (user.otp &&user.otpExpiry > currentTime) {
+        return sendResponse(res, 200, { otp: user.otp, otpExpiry: user.otpExpiry }, null, "OTP already sent");
+      }
     } else {
       user = await User.create({
         staff_id,
@@ -117,7 +121,7 @@ const verifyOTP = async (req, res) => {
       return sendResponse(res, 400, null, "OTP has expired");
     }
 
-    user.isRegistered = true;
+    // user.isRegistered = true;
     user.isPhoneVerfied = true;
     user.otp = null; // Clear OTP after successful verification
     await user.save();

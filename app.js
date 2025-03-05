@@ -14,9 +14,8 @@ const logger = require("@utils/logger");
 // import routes middleware
 const routes = require("./routes");
 const authMiddleware = require("./middlewares/authMiddleware.js");
-const generateOTP = require("./utils/generateOTP.js");
 const path = require("path");
-const fs = require("fs");
+
 
 let corsOptions = {
   origin: "https://localhost:8081",
@@ -55,6 +54,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+
 
 //* Serve the 'downloads' directory as static
 // Serve static files from public directory

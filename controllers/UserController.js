@@ -28,7 +28,7 @@ const { removeOldProfileImage } = require("../utils/upload");
 const findAllUsers = async (req, res) => {
   //* Fetch all occupations from users table
   try {
-    const data = await getData(User);
+    const data = await getData(User,{isRegistered: true});
     sendResponse(res, 200, data);
   } catch (error) {
     sendResponse(res, 400, null, error.message);
@@ -41,7 +41,7 @@ const findAllPaginatedUsers = async (req, res) => {
     query.limit = parseInt(query.limit, 10) || 10;
     query.page = parseInt(query.page, 10) || 1;
     query.offset = query.limit * (query.page - 1);
-    const data = await getPaginatedData(User, { ...query });
+    const data = await getPaginatedData(User, { ...query, where: {isRegistered: true} });
     sendResponse(res, 200, data);
   } catch (error) {
     sendResponse(res, 404, null, error.message);

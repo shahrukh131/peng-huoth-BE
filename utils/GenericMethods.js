@@ -14,6 +14,8 @@ const getData = async (modelName, filter, includes) => {
     where: filter ? filter : null,
     include: includes ? includes : null,
   });
+  console.log(data);
+  
   return data;
 };
 
@@ -22,6 +24,8 @@ const getPaginatedData = async (modelName, filter, includes) => {
     ...filter,
     include: includes ? includes : null,
   });
+  console.log(filter);
+  
   return data;
 };
 

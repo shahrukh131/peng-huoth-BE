@@ -24,6 +24,7 @@ function sendResponse(
     404: "Resource not found",
     422: "Validation error",
     500: "Internal server error",
+    429: "Too many requests",
   };
 
   // Use custom message if provided, otherwise use the default message for the status code
