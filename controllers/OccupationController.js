@@ -23,9 +23,9 @@ const findAllOccupations = async (req, res) => {
   //* Fetch all occupations from occupations table
   try {
     const data = await getData(Occupation);
-    sendResponse(res, 200, data);
+    sendResponse(res, 200, data,null);
   } catch (error) {
-    sendResponse(res, 404, null, error.message);
+    sendResponse(res, 400, null, error);
   }
 };
 
