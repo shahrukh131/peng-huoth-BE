@@ -28,8 +28,17 @@ const getPaginatedData = async (modelName, filter, includes) => {
     attributes: { exclude: ["password"] },
     subquery: false,
   });
+  const totalPages = Math.ceil(data.count / filter.limit);
   
-  return data;
+  return {
+    count: data.count, // Total count of records
+    rows: data.rows,
+    pagination: {
+      totalPages,        // Total number of pages
+      currentPage: filter.page || 1, // Current page
+      limit: filter.limit, // Records per page
+    },
+  };
 };
 
 const updatedData = async (modelName, filter, newData) => {
