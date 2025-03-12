@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       BusinessUnit.hasMany(models.Lead, {
-        foreignKey: 'businessUnit_id',
+        foreignKey: 'business_unit_id',
       });
     }
   }

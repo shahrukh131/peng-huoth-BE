@@ -2,6 +2,7 @@ const { logger } = require("sequelize/lib/utils/logger");
 const ExcelJS = require("exceljs");
 const path = require("path");
 const fs = require("fs");
+const { raw } = require("../validations/occupation");
 
 
 const createData = async (modelName, data) => {
@@ -23,8 +24,10 @@ const getPaginatedData = async (modelName, filter, includes) => {
   const data = await modelName.findAndCountAll({
     ...filter,
     include: includes ? includes : null,
+    raw: false,
+    attributes: { exclude: ["password"] },
+    subquery: false,
   });
-  console.log(filter);
   
   return data;
 };

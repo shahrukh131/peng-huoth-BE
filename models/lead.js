@@ -14,10 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Lead.belongsTo(models.BusinessUnit, {
-        foreignKey: 'businessUnit_id',
+        foreignKey: 'business_unit_id',
       });
       Lead.belongsTo(models.LeadStatus, {
-        foreignKey: 'leadStatus_id',
+        foreignKey: 'lead_status_id',
       });
       Lead.belongsTo(models.Occupation, {
         foreignKey: 'occupation_id',
@@ -30,11 +30,11 @@ module.exports = (sequelize, DataTypes) => {
   }
   Lead.init({
     ...CoreModel(DataTypes),
-    customerName: {
+    customer_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    phoneNumber: {
+    phone_number: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -42,15 +42,19 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('Male', 'Female', 'Other'),
       allowNull: false,
     },
-    businessUnit_id: {
+    remarks: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    business_unit_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'BusinessUnits',
+        model: 'BusinessUnit',
         key: 'id',
       },
     },
-    leadStatus_id: {
+    lead_status_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
