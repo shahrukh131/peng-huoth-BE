@@ -27,7 +27,6 @@ function sendResponse(
     429: "Too many requests",
   };
 
-  // Use custom message if provided, otherwise use the default message for the status code
   const message =
     customMessage || statusMessages[statusCode] || "Unknown status";
 
@@ -40,12 +39,12 @@ function sendResponse(
     response.data = data;
   }
   if (error) {
-    // Handle Sequelize validation errors separately
+    
     if (
       error.name === "SequelizeValidationError" ||
       error.name === "SequelizeUniqueConstraintError"
     ) {
-      statusCode = 422; // Use 422 Unprocessable Entity for validation errors
+      statusCode = 422; 
       response.success = false;
       response.message = "Validation error";
       response.errors = error.errors.map((err) => ({

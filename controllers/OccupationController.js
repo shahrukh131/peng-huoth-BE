@@ -42,7 +42,7 @@ const findAllOccupations = async (req, res) => {
 //   }
 // };
 const findOccupationById = async (req, res) => {
-  //* Fetch specific book from BOOKS table
+  //* Fetch specific occupation from Occupations table
   try {
     const id = req.params.id;
     const data = await getData(Occupation, { id: id });

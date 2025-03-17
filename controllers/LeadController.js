@@ -1,9 +1,13 @@
 const { Lead, User, BusinessUnit, LeadStatus, Occupation } = require("@models");
 const sendResponse = require("@utils/sendResponse");
 const { log } = require("winston");
-const { createData, getPaginatedData } = require("../utils/GenericMethods");
-
-
+const {
+  createData,
+  getPaginatedData,
+  getData,
+  updatedData,
+  deletedData,
+} = require("../utils/GenericMethods");
 
 const save = async (req, res) => {
   //* Saves Lead into the database.
@@ -58,32 +62,31 @@ const findAllPaginatedLeads = async (req, res) => {
       page,
       limit,
       offset,
-      where: { active: true, ...filters },  
+      where: { active: true, ...filters },
     };
 
     const includes = [
       {
         model: BusinessUnit,
-        attributes: ['name'],
+        attributes: ["name"],
       },
       {
         model: Occupation,
-        attributes: ['name'] 
+        attributes: ["name"],
       },
       {
-        model: User, 
-        as: "createdLeads", 
-        attributes: ["id", "email", "staff_name"], 
+        model: User,
+        as: "createdLeads",
+        attributes: ["id", "email", "staff_name"],
       },
       {
-        model: LeadStatus, 
-        attributes: ["id", "name"], 
-      }
+        model: LeadStatus,
+        attributes: ["id", "name"],
+      },
     ];
 
     const data = await getPaginatedData(Lead, filter, includes);
 
-    
     sendResponse(res, 200, data);
   } catch (error) {
     sendResponse(res, 404, null, error.message);
@@ -91,12 +94,128 @@ const findAllPaginatedLeads = async (req, res) => {
 };
 
 // Fetch a lead by ID
+const findLeadById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await getData(Lead, { id: id });
+    sendResponse(res, 200, data);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
 
 // Update a lead by ID
+const updateLead = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await updatedData(Lead, { id: id }, req.body);
+    sendResponse(res, 200, data, null, "successfully updated!");
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
 
 // Delete a lead by ID
+
+const deleteLead = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await deletedData(Lead, { id: id });
+    sendResponse(res, 200, data, null, "successfully deleted!");
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
+
+// Find All Leads with specific Lead Status
+const findAllLeadsByStatus = async (req, res) => {
+  try {
+    const { statusId } = req.params;
+    let { limit, page, ...filters } = req.query;
+    limit = parseInt(limit, 10) || 10;
+    page = parseInt(page, 10) || 1;
+    const offset = limit * (page - 1);
+
+    const filter = {
+      page,
+      limit,
+      offset,
+      where: { active: true, lead_status_id: statusId, ...filters },
+    };
+    const includes = [
+      {
+        model: BusinessUnit,
+        attributes: ["name"],
+      },
+      {
+        model: Occupation,
+        attributes: ["name"],
+      },
+      {
+        model: User,
+        as: "createdLeads",
+        attributes: ["id", "email", "staff_name"],
+      },
+      {
+        model: LeadStatus,
+        attributes: ["id", "name"],
+      },
+    ];
+    const data = await getPaginatedData(Lead, filter, includes);
+    sendResponse(res, 200, data);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
+
+//Find All Leads with specific Business Unit
+
+const findAllLeadsByBusinessUnit = async (req, res) => {
+  try {
+    const { businessUnitId } = req.params;
+    let { limit, page, ...filters } = req.query;
+    limit = parseInt(limit, 10) || 10;
+    page = parseInt(page, 10) || 1;
+    const offset = limit * (page - 1);
+
+    const filter = {
+      page,
+      limit,
+      offset,
+      where: { active: true, business_unit_id: businessUnitId, ...filters },
+    };
+    const includes = [
+      {
+        model: BusinessUnit,
+        attributes: ["name"],
+      },
+      {
+        model: Occupation,
+        attributes: ["name"],
+      },
+      {
+        model: User,
+        as: "createdLeads",
+        attributes: ["id", "email", "staff_name"],
+      },
+      {
+        model: LeadStatus,
+        attributes: ["id", "name"],
+      },
+    ];
+    const data = await getPaginatedData(Lead, filter, includes);
+    sendResponse(res, 200, data);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
 
 module.exports = {
   save,
   findAllPaginatedLeads,
+  findLeadById,
+  updateLead,
+  deleteLead,
+  findAllLeadsByStatus,
+  findAllLeadsByBusinessUnit,
 };
