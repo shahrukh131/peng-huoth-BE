@@ -55,6 +55,7 @@ const findAllPaginatedLeads = async (req, res) => {
     const offset = limit * (page - 1);
 
     const filter = {
+      page,
       limit,
       offset,
       where: { active: true, ...filters },  
@@ -63,7 +64,7 @@ const findAllPaginatedLeads = async (req, res) => {
     const includes = [
       {
         model: BusinessUnit,
-        attributes: [[ 'name', 'business_unit_name' ]],
+        attributes: ['name'],
       },
       {
         model: Occupation,
