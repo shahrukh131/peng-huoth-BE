@@ -127,7 +127,7 @@ const deleteLead = async (req, res) => {
   }
 };
 
-// Find All Leads with specific Lead Status
+//* Find All Leads with specific Lead Status
 const findAllLeadsByStatus = async (req, res) => {
   try {
     const { statusId } = req.params;
@@ -168,7 +168,7 @@ const findAllLeadsByStatus = async (req, res) => {
   }
 };
 
-//Find All Leads with specific Business Unit
+//*Find All Leads with specific Business Unit
 
 const findAllLeadsByBusinessUnit = async (req, res) => {
   try {
