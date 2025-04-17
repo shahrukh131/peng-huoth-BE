@@ -1,6 +1,6 @@
 const { Lead, User, BusinessUnit, LeadStatus, Occupation } = require("@models");
 const sendResponse = require("@utils/sendResponse");
-const { log } = require("winston");
+
 const {
   createData,
   getPaginatedData,
@@ -8,6 +8,7 @@ const {
   updatedData,
   deletedData,
 } = require("../utils/GenericMethods");
+
 
 const save = async (req, res) => {
   //* Saves Lead into the database.
@@ -50,8 +51,10 @@ const save = async (req, res) => {
   }
 };
 
-// Fetch all leads by pagination
+//* Fetch all leads by pagination
 const findAllPaginatedLeads = async (req, res) => {
+  console.log("Find all paginated leads endpoint hit");
+  
   try {
     let { limit, page, ...filters } = req.query;
     limit = parseInt(limit, 10) || 10;
@@ -93,7 +96,7 @@ const findAllPaginatedLeads = async (req, res) => {
   }
 };
 
-// Fetch a lead by ID
+//* Fetch a lead by ID
 const findLeadById = async (req, res) => {
   try {
     const id = req.params.id;
@@ -104,7 +107,7 @@ const findLeadById = async (req, res) => {
   }
 };
 
-// Update a lead by ID
+//* Update a lead by ID
 const updateLead = async (req, res) => {
   try {
     const id = req.params.id;
@@ -115,7 +118,7 @@ const updateLead = async (req, res) => {
   }
 };
 
-// Delete a lead by ID
+//* Delete a lead by ID
 
 const deleteLead = async (req, res) => {
   try {
@@ -126,6 +129,8 @@ const deleteLead = async (req, res) => {
     sendResponse(res, 404, null, error.message);
   }
 };
+
+
 
 //* Find All Leads with specific Lead Status
 const findAllLeadsByStatus = async (req, res) => {
@@ -210,6 +215,41 @@ const findAllLeadsByBusinessUnit = async (req, res) => {
   }
 };
 
+
+const getLeadCount = async (req, res) => {
+  try {
+    console.log("Lead count endpoint hit");
+
+    // Fetch all business units and their lead counts in a single query
+    const businessUnitsWithLeadCounts = await BusinessUnit.findAll({
+      attributes: ["id", "name", [Lead.sequelize.fn("COUNT", Lead.sequelize.col("Leads.id")), "lead_count"]],
+      include: [
+        {
+          model: Lead,
+          attributes: [],
+          where: { active: true },
+          required: false, // Include business units even if they have no leads
+        },
+      ],
+      group: ["BusinessUnit.id"],
+      raw: true,
+    });
+
+    // Format the response
+    const formattedResults = businessUnitsWithLeadCounts.map(unit => ({
+      id: unit.id,
+      business_unit_name: unit.name,
+      count: parseInt(unit.lead_count, 10) || 0,
+    }));
+
+    sendResponse(res, 200, formattedResults);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
+
+
+
 module.exports = {
   save,
   findAllPaginatedLeads,
@@ -218,4 +258,5 @@ module.exports = {
   deleteLead,
   findAllLeadsByStatus,
   findAllLeadsByBusinessUnit,
+  getLeadCount
 };
