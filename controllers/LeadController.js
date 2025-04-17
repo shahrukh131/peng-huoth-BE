@@ -218,9 +218,6 @@ const findAllLeadsByBusinessUnit = async (req, res) => {
 
 const getLeadCount = async (req, res) => {
   try {
-    console.log("Lead count endpoint hit");
-
-    // Fetch all business units and their lead counts in a single query
     const businessUnitsWithLeadCounts = await BusinessUnit.findAll({
       attributes: ["id", "name", [Lead.sequelize.fn("COUNT", Lead.sequelize.col("Leads.id")), "lead_count"]],
       include: [
@@ -235,7 +232,6 @@ const getLeadCount = async (req, res) => {
       raw: true,
     });
 
-    // Format the response
     const formattedResults = businessUnitsWithLeadCounts.map(unit => ({
       id: unit.id,
       business_unit_name: unit.name,
