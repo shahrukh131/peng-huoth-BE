@@ -1,10 +1,10 @@
 const Joi = require("joi");
 const userRegisterInitiateSchema = Joi.object({
-    staff_id: Joi.string().max(4).required().messages({
+    staff_id: Joi.string().max(4).messages({
         'string.empty': 'Staff ID is required',
         'string.max': 'Staff ID must be at most 4 characters long'
     }),
-    staff_name: Joi.string().required().messages({
+    staff_name: Joi.string().messages({
         'string.empty': 'Name is required'
     }),
     email: Joi.string().email().required().messages({

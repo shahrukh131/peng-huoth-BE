@@ -10,7 +10,7 @@ const userRegisterInitiateSchema = require("../validations/auth/initiateRegister
 const limiter = require("../middlewares/rateLimiter");
 
 
-route.post('/register',  validate(userSchema),register);
+// route.post('/register',  validate(userSchema),register);
 route.post('/register/initiate', limiter, validate(userRegisterInitiateSchema),initiateRegister);
 route.post('/register/verify-otp',verifyOTP);
 route.post('/register/complete',completeRegistration);

@@ -21,7 +21,11 @@ module.exports = (sequelize, DataTypes) => {
   User.init({
     ...CoreModel(DataTypes),
     staff_id: DataTypes.STRING,
-    staff_name: DataTypes.STRING,
+    staff_name: {
+      type: DataTypes.STRING,
+      allowNull: true
+    }
+    ,
     email: {
       type:DataTypes.STRING,
       allowNull:false,

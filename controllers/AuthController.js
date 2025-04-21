@@ -18,8 +18,8 @@ const register = async (req, res) => {
 
   try {
     const newData = {
-      staff_id,
-      staff_name,
+      // staff_id,
+      // staff_name,
       email,
       phoneNumber,
       password: await generateHashedPassword(password),
