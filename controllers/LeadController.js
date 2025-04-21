@@ -8,6 +8,7 @@ const {
   updatedData,
   deletedData,
 } = require("../utils/GenericMethods");
+const { Sequelize } = require("sequelize");
 
 
 const save = async (req, res) => {
@@ -245,6 +246,58 @@ const getLeadCount = async (req, res) => {
 };
 
 
+const getLeadStatusCountByBusinessUnit = async (req, res) => {
+  try {
+    const {businessUnitId} = req.params;
+
+    const leadCounts = await Lead.findAll({
+      attributes: [
+        [Sequelize.col('BusinessUnit.id'), 'business_unit_id'],
+        [Sequelize.col('BusinessUnit.name'), 'business_unit_name'],
+        [Sequelize.col('LeadStatus.name'), 'status'],
+        [Sequelize.fn('COUNT', Sequelize.col('Lead.id')), 'count']
+      ],
+      include: [
+        {
+          model: BusinessUnit,
+          attributes: []
+        },
+        {
+          model: LeadStatus,
+          attributes: []
+        }
+      ],
+      where: {
+        active: true,
+        business_unit_id: businessUnitId
+      },
+      group: ['BusinessUnit.id', 'LeadStatus.id'],
+      raw: true
+    });
+    // Transform the data
+    const result = leadCounts.reduce((acc, curr) => {
+      if (!acc.id) {
+        acc.id = curr.business_unit_id;
+        acc.business_unit_name = curr.business_unit_name;
+        acc.status_counts = {};
+      }
+      acc.status_counts[curr.status] = parseInt(curr.count);
+      return acc;
+    }, {});
+
+    sendResponse(res, 200, result || {
+      id: parseInt(businessUnitId),
+      business_unit_name: null,
+      status_counts: {}
+    });
+    
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+    
+  }
+}
+
+
 
 module.exports = {
   save,
@@ -254,5 +307,6 @@ module.exports = {
   deleteLead,
   findAllLeadsByStatus,
   findAllLeadsByBusinessUnit,
-  getLeadCount
+  getLeadCount,
+  getLeadStatusCountByBusinessUnit
 };
