@@ -245,7 +245,7 @@ const getLeadCount = async (req, res) => {
   }
 };
 
-
+//* Retrieves the count of leads by status for a specific business unit
 const getLeadStatusCountByBusinessUnit = async (req, res) => {
   try {
     const {businessUnitId} = req.params;
