@@ -298,6 +298,66 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
 }
 
 
+/**
+ ** Retrieves paginated leads filtered by business unit id and lead status id
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @param {string} req.params.businessUnitId - The id of the Business Unit
+ * @param {string} req.params.statusId - The id of the Lead Status
+ * @param {number} req.query.page - The page number to retrieve
+ * @param {number} req.query.limit - The number of records per page
+ */
+const getLeadByBuAndStatus = async (req, res) => {
+  try {
+    const { businessUnitId, statusId } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = limit * (page - 1);
+
+    // Build where clause
+    const whereClause = {
+      active: true,
+    };
+    if (businessUnitId) {
+      whereClause.business_unit_id = businessUnitId;
+    }
+    if (statusId) {
+      whereClause.lead_status_id = statusId;
+    }
+
+    // Define includes
+    const includes = [
+      {
+        model: BusinessUnit,
+        attributes: ["name"],
+        required: true,
+      },
+      {
+        model: Occupation,
+        attributes: ["name"],
+        required: true,
+      },
+      {
+        model: LeadStatus,
+        attributes: ["id", "name"],
+        required: true,
+      },
+    ];
+    const filter = {
+      where: whereClause,
+      limit: limit,
+      offset: offset,
+      page: page,
+      order: [["created_at", "DESC"]],
+    };
+    const result = await getPaginatedData(Lead, filter, includes);
+    sendResponse(res, 200, result);
+  } catch (error) {
+    sendResponse(res, 404, null, error.message);
+  }
+};
+
+
 
 module.exports = {
   save,
@@ -308,5 +368,6 @@ module.exports = {
   findAllLeadsByStatus,
   findAllLeadsByBusinessUnit,
   getLeadCount,
-  getLeadStatusCountByBusinessUnit
+  getLeadStatusCountByBusinessUnit,
+  getLeadByBuAndStatus
 };
