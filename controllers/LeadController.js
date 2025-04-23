@@ -344,7 +344,7 @@ const getLeadByBuAndStatus = async (req, res) => {
       },
     ];
     const filter = {
-      where: whereClause,
+      where: whereClause, //active: true
       limit: limit,
       offset: offset,
       page: page,
