@@ -7,6 +7,7 @@ const {
   getData,
   updatedData,
   deletedData,
+  getCounts,
 } = require("../utils/GenericMethods");
 const { Sequelize } = require("sequelize");
 
@@ -238,7 +239,19 @@ const getLeadCount = async (req, res) => {
       business_unit_name: unit.name,
       count: parseInt(unit.lead_count, 10) || 0,
     }));
-
+    // const counts = await getCounts(
+    //   BusinessUnit,
+    //   ["id", "name"],
+    //   { active: true },
+    //   [
+    //     {
+    //       model: Lead,
+    //       attributes: [],
+    //       where: { active: true },
+    //       required: false, // Include business units even if they have no leads
+    //     },
+    //   ]
+    // );
     sendResponse(res, 200, formattedResults);
   } catch (error) {
     sendResponse(res, 404, null, error.message);

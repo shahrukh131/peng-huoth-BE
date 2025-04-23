@@ -3,6 +3,7 @@ const ExcelJS = require("exceljs");
 const path = require("path");
 const fs = require("fs");
 const { raw } = require("../validations/occupation");
+const { Sequelize } = require("sequelize");
 
 
 const createData = async (modelName, data) => {
@@ -223,6 +224,30 @@ const createDataWithFiles = async (modelName, data, files) => {
 };
 
 
+const getCounts = async (model,groupBy,whereClause={},include=[])=>{
+  try {
+    const counts = await model.findAll({
+      attributes: [
+        ...groupBy,
+        [Sequelize.fn("COUNT", Sequelize.col(`${model.name}.id`)), "count"],
+      ],
+      where: whereClause,
+      include: include,
+      group: groupBy,
+      raw: true,
+    });
+    return counts.map((item) => ({
+      ...item,
+      count: parseInt(item.count, 10),
+    }));
+  } catch (error) {
+    console.error("Error in getCounts:", error);
+    throw error;
+  }
+
+}
+
+
 
 
 module.exports = {
@@ -234,5 +259,6 @@ module.exports = {
   createBulkData,
   generateExcel,
   handleFileUpload,
-  createDataWithFiles
+  createDataWithFiles,
+  getCounts
 };

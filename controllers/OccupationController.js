@@ -29,18 +29,7 @@ const findAllOccupations = async (req, res) => {
   }
 };
 
-//* const findAllPaginatedBooks = async (req, res) => {
-//   try {
-//     let query = req.query;
-//     query.limit = parseInt(query.limit, 10) || 10;
-//     query.page = parseInt(query.page, 10)  || 1;
-//     query.offset = query.limit * (query.page - 1);
-//     const data = await getPaginatedData(Book, { ...query });
-//     sendSuccess(res, 200, "Successfully Fetched", data);
-//   } catch (error) {
-//     sendError(res, 404, error.message);
-//   }
-// };
+
 const findOccupationById = async (req, res) => {
   //* Fetch specific occupation from Occupations table
   try {
@@ -86,5 +75,5 @@ module.exports = {
   updateOccupation,
   deleteOccupation,
   findOccupationById,
-  //   findAllPaginatedBooks,
+ 
 };
