@@ -15,7 +15,14 @@ const logger = require("@utils/logger");
 const routes = require("./routes");
 const authMiddleware = require("./middlewares/authMiddleware.js");
 const path = require("path");
+const admin = require('firebase-admin');
 
+// Initialize Firebase Admin
+const serviceAccount = require('./firebaseServiceAccountKey.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 let corsOptions = {
   origin: "https://localhost:8081",
@@ -74,6 +81,26 @@ app.get("/api/protected", authMiddleware, (req, res) => {
 });
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Peng Huoth Application" });
+});
+
+app.post('/api/send-notification', async (req, res) => {
+  const { token, title, body } = req.body;
+
+  const message = {
+    notification: {
+      title,
+      body
+    },
+    token
+  };
+
+  try {
+    const response = await admin.messaging().send(message);
+    res.status(200).json({ success: true, message: 'Notification sent!', response });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 app.use(globalErrorHandler);
