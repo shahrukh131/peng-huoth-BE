@@ -29,7 +29,7 @@ const findAllOccupations = async (req, res) => {
   }
 };
 
-// const findAllPaginatedBooks = async (req, res) => {
+//* const findAllPaginatedBooks = async (req, res) => {
 //   try {
 //     let query = req.query;
 //     query.limit = parseInt(query.limit, 10) || 10;
