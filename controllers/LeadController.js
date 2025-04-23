@@ -102,7 +102,22 @@ const findAllPaginatedLeads = async (req, res) => {
 const findLeadById = async (req, res) => {
   try {
     const id = req.params.id;
-    const data = await getData(Lead, { id: id });
+    const includes = [
+      {
+        model: BusinessUnit,
+        attributes: ["id","name"],
+      },
+      {
+        model: Occupation,
+        attributes: ["id","name"],
+      },
+   
+      {
+        model: LeadStatus,
+        attributes: ["id", "name"],
+      },
+    ];
+    const data = await getData(Lead, { id: id }, includes);
     sendResponse(res, 200, data);
   } catch (error) {
     sendResponse(res, 404, null, error.message);

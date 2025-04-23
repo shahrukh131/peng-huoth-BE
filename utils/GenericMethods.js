@@ -15,6 +15,7 @@ const getData = async (modelName, filter, includes) => {
   const data = await modelName.findAll({
     where: filter ? filter : null,
     include: includes ? includes : null,
+    
   });
   console.log(data);
   
