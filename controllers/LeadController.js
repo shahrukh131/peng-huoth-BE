@@ -10,7 +10,7 @@ const {
   getCounts,
 } = require("../utils/GenericMethods");
 const { Sequelize } = require("sequelize");
-
+const { sendLeadNotification } = require("../utils/telegramNotification");
 
 const save = async (req, res) => {
   //* Saves Lead into the database.
@@ -47,7 +47,20 @@ const save = async (req, res) => {
       created_by_dn: user.staff_name,
     });
 
-    sendResponse(res, 201, data);
+    // Fetch lead with associations for notification
+    const leadWithDetails = await Lead.findOne({
+      where: { id: data.id },
+      include: [
+        { model: BusinessUnit },
+        { model: LeadStatus },
+        { model: Occupation },
+      ],
+    });
+    sendLeadNotification(leadWithDetails, "created")
+    .catch(error => console.error('Notification error:', error));
+
+  // Return response immediately
+  return sendResponse(res, 201, data);
   } catch (error) {
     sendResponse(res, 400, null, error);
   }
@@ -55,8 +68,8 @@ const save = async (req, res) => {
 
 //* Fetch all leads by pagination
 const findAllPaginatedLeads = async (req, res) => {
-  console.log("Find all paginated leads endpoint hit");
   
+
   try {
     let { limit, page, ...filters } = req.query;
     limit = parseInt(limit, 10) || 10;
@@ -105,13 +118,13 @@ const findLeadById = async (req, res) => {
     const includes = [
       {
         model: BusinessUnit,
-        attributes: ["id","name"],
+        attributes: ["id", "name"],
       },
       {
         model: Occupation,
-        attributes: ["id","name"],
+        attributes: ["id", "name"],
       },
-   
+
       {
         model: LeadStatus,
         attributes: ["id", "name"],
@@ -128,7 +141,38 @@ const findLeadById = async (req, res) => {
 const updateLead = async (req, res) => {
   try {
     const id = req.params.id;
-    const data = await updatedData(Lead, { id: id }, req.body);
+    const { user_id, ...updateFields } = req.body;
+
+    // Fetch the user to get the staff name
+    const user = await User.findOne({
+      where: { id: user_id },
+      attributes: ["staff_name"],
+      raw: true,
+    });
+
+    if (!user) {
+      return sendResponse(res, 404, null, "User not found");
+    }
+
+    // Add updated_by_dn to the update fields
+    updateFields.updated_by_dn = user.staff_name; 
+    updateFields.updated_by_email = user.email; 
+
+    const data = await updatedData(Lead, { id: id }, updateFields);
+
+    // Fetch lead with associations for notification
+    const leadWithDetails = await Lead.findOne({
+      where: { id: id },
+      include: [
+        { model: BusinessUnit },
+        { model: LeadStatus },
+        { model: Occupation },
+      ],
+    });
+
+    sendLeadNotification(leadWithDetails, "updated")
+      .catch(error => console.error('Notification error:', error));
+
     sendResponse(res, 200, data, null, "successfully updated!");
   } catch (error) {
     sendResponse(res, 404, null, error.message);
@@ -146,8 +190,6 @@ const deleteLead = async (req, res) => {
     sendResponse(res, 404, null, error.message);
   }
 };
-
-
 
 //* Find All Leads with specific Lead Status
 const findAllLeadsByStatus = async (req, res) => {
@@ -232,11 +274,17 @@ const findAllLeadsByBusinessUnit = async (req, res) => {
   }
 };
 
-
 const getLeadCount = async (req, res) => {
   try {
     const businessUnitsWithLeadCounts = await BusinessUnit.findAll({
-      attributes: ["id", "name", [Lead.sequelize.fn("COUNT", Lead.sequelize.col("Leads.id")), "lead_count"]],
+      attributes: [
+        "id",
+        "name",
+        [
+          Lead.sequelize.fn("COUNT", Lead.sequelize.col("Leads.id")),
+          "lead_count",
+        ],
+      ],
       include: [
         {
           model: Lead,
@@ -249,7 +297,7 @@ const getLeadCount = async (req, res) => {
       raw: true,
     });
 
-    const formattedResults = businessUnitsWithLeadCounts.map(unit => ({
+    const formattedResults = businessUnitsWithLeadCounts.map((unit) => ({
       id: unit.id,
       business_unit_name: unit.name,
       count: parseInt(unit.lead_count, 10) || 0,
@@ -276,31 +324,31 @@ const getLeadCount = async (req, res) => {
 //* Retrieves the count of leads by status for a specific business unit
 const getLeadStatusCountByBusinessUnit = async (req, res) => {
   try {
-    const {businessUnitId} = req.params;
+    const { businessUnitId } = req.params;
 
     const leadCounts = await Lead.findAll({
       attributes: [
-        [Sequelize.col('BusinessUnit.id'), 'business_unit_id'],
-        [Sequelize.col('BusinessUnit.name'), 'business_unit_name'],
-        [Sequelize.col('LeadStatus.name'), 'status'],
-        [Sequelize.fn('COUNT', Sequelize.col('Lead.id')), 'count']
+        [Sequelize.col("BusinessUnit.id"), "business_unit_id"],
+        [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+        [Sequelize.col("LeadStatus.name"), "status"],
+        [Sequelize.fn("COUNT", Sequelize.col("Lead.id")), "count"],
       ],
       include: [
         {
           model: BusinessUnit,
-          attributes: []
+          attributes: [],
         },
         {
           model: LeadStatus,
-          attributes: []
-        }
+          attributes: [],
+        },
       ],
       where: {
         active: true,
-        business_unit_id: businessUnitId
+        business_unit_id: businessUnitId,
       },
-      group: ['BusinessUnit.id', 'LeadStatus.id'],
-      raw: true
+      group: ["BusinessUnit.id", "LeadStatus.id"],
+      raw: true,
     });
     // Transform the data
     const result = leadCounts.reduce((acc, curr) => {
@@ -313,18 +361,19 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
       return acc;
     }, {});
 
-    sendResponse(res, 200, result || {
-      id: parseInt(businessUnitId),
-      business_unit_name: null,
-      status_counts: {}
-    });
-    
+    sendResponse(
+      res,
+      200,
+      result || {
+        id: parseInt(businessUnitId),
+        business_unit_name: null,
+        status_counts: {},
+      }
+    );
   } catch (error) {
     sendResponse(res, 404, null, error.message);
-    
   }
-}
-
+};
 
 /**
  ** Retrieves paginated leads filtered by business unit id and lead status id
@@ -385,8 +434,6 @@ const getLeadByBuAndStatus = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   save,
   findAllPaginatedLeads,
@@ -397,5 +444,5 @@ module.exports = {
   findAllLeadsByBusinessUnit,
   getLeadCount,
   getLeadStatusCountByBusinessUnit,
-  getLeadByBuAndStatus
+  getLeadByBuAndStatus,
 };

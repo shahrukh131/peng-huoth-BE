@@ -19,6 +19,7 @@ const admin = require('firebase-admin');
 
 // Initialize Firebase Admin
 const serviceAccount = require('./firebaseServiceAccountKey.json');
+const TelegramBot = require("node-telegram-bot-api");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -61,6 +62,42 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+
+
+// Replace with your own Telegram Bot Token
+const TELEGRAM_BOT_TOKEN = '8090911281:AAExxDME5QNOiXRWVZcHtO_QfL0n9F33oa4';
+// Replace with your team's chat ID
+const TELEGRAM_CHAT_ID = '-1002600392570';
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false });
+
+app.get('/get-updates', async (req, res) => {
+  try {
+    const updates = await bot.getUpdates();
+    console.log(JSON.stringify(updates, null, 2));
+    res.send(updates);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/send-notification', async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    await bot.sendMessage(TELEGRAM_CHAT_ID, message);
+
+    res.status(200).json({ success: true, message: 'Notification sent successfully!' });
+  } catch (error) {
+    console.error('Error sending Telegram message:', error);
+    res.status(500).json({ success: false, error: 'Failed to send notification' });
+  }
+});
 
 
 
