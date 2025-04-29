@@ -541,7 +541,7 @@ const getLeadByBuAndStatus = async (req, res) => {
         exclude: ["password", "created_by_user_id"],
         include: [
           [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
-          [Sequelize.col("Occupation.name"), "occupation_name"],
+          [Sequelize.col("Occupation.name"), "position"],
           [Sequelize.col("LeadStatus.name"), "lead_status_name"],
         ],
       },
