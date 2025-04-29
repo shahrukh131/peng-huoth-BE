@@ -322,14 +322,74 @@ const getLeadCount = async (req, res) => {
 };
 
 //* Retrieves the count of leads by status for a specific business unit
+// const getLeadStatusCountByBusinessUnit = async (req, res) => {
+//   try {
+//     const { businessUnitId } = req.params;
+
+//     const leadCounts = await Lead.findAll({
+//       attributes: [
+//         [Sequelize.col("BusinessUnit.id"), "business_unit_id"],
+//         [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+//         [Sequelize.col("LeadStatus.name"), "status"],
+//         [Sequelize.fn("COUNT", Sequelize.col("Lead.id")), "count"],
+//       ],
+//       include: [
+//         {
+//           model: BusinessUnit,
+//           attributes: [],
+//         },
+//         {
+//           model: LeadStatus,
+//           attributes: [],
+//         },
+//       ],
+//       where: {
+//         active: true,
+//         business_unit_id: businessUnitId,
+//       },
+//       group: ["BusinessUnit.id", "LeadStatus.id"],
+//       raw: true,
+//     });
+//     // Transform the data
+//     const result = leadCounts.reduce((acc, curr) => {
+//       if (!acc.id) {
+//         acc.id = curr.business_unit_id;
+//         acc.business_unit_name = curr.business_unit_name;
+//         acc.status_counts = {};
+//       }
+//       acc.status_counts[curr.status] = parseInt(curr.count);
+//       return acc;
+//     }, {});
+
+//     sendResponse(
+//       res,
+//       200,
+//       result || {
+//         id: parseInt(businessUnitId),
+//         business_unit_name: null,
+//         status_counts: {},
+//       }
+//     );
+//   } catch (error) {
+//     sendResponse(res, 404, null, error.message);
+//   }
+// };
 const getLeadStatusCountByBusinessUnit = async (req, res) => {
   try {
     const { businessUnitId } = req.params;
 
+    // First, get all possible lead statuses
+    const allLeadStatuses = await LeadStatus.findAll({
+      attributes: ['id', 'name'],
+      raw: true
+    });
+
+    // Then get the counts for the specific business unit
     const leadCounts = await Lead.findAll({
       attributes: [
         [Sequelize.col("BusinessUnit.id"), "business_unit_id"],
         [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+        [Sequelize.col("LeadStatus.id"), "status_id"],
         [Sequelize.col("LeadStatus.name"), "status"],
         [Sequelize.fn("COUNT", Sequelize.col("Lead.id")), "count"],
       ],
@@ -350,26 +410,39 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
       group: ["BusinessUnit.id", "LeadStatus.id"],
       raw: true,
     });
-    // Transform the data
-    const result = leadCounts.reduce((acc, curr) => {
-      if (!acc.id) {
-        acc.id = curr.business_unit_id;
-        acc.business_unit_name = curr.business_unit_name;
-        acc.status_counts = {};
-      }
-      acc.status_counts[curr.status] = parseInt(curr.count);
-      return acc;
-    }, {});
 
-    sendResponse(
-      res,
-      200,
-      result || {
-        id: parseInt(businessUnitId),
-        business_unit_name: null,
-        status_counts: {},
+    // Get business unit info
+    let businessUnitInfo = {
+      id: parseInt(businessUnitId),
+      business_unit_name: null,
+      status_counts: []
+    };
+
+    // If we have data, extract the business unit info
+    if (leadCounts.length > 0) {
+      businessUnitInfo.id = leadCounts[0].business_unit_id;
+      businessUnitInfo.business_unit_name = leadCounts[0].business_unit_name;
+    } else {
+      // If no leads found, try to get the business unit name
+      const businessUnit = await BusinessUnit.findByPk(businessUnitId, { raw: true });
+      if (businessUnit) {
+        businessUnitInfo.business_unit_name = businessUnit.name;
       }
-    );
+    }
+    
+    // Convert lead counts to a map for easier lookup
+    const statusCountMap = {};
+    leadCounts.forEach(item => {
+      statusCountMap[item.status] = parseInt(item.count);
+    });
+    
+    // Create status_counts array with all possible statuses
+    businessUnitInfo.status_counts = allLeadStatuses.map(status => ({
+      lead_status: status.name,
+      count: statusCountMap[status.name] || 0
+    }));
+    
+    sendResponse(res, 200, businessUnitInfo);
   } catch (error) {
     sendResponse(res, 404, null, error.message);
   }
