@@ -5,38 +5,44 @@ const fs = require("fs");
 const { raw } = require("../validations/occupation");
 const { Sequelize } = require("sequelize");
 
-
 const createData = async (modelName, data) => {
   const res = await modelName.create(data);
   return res;
 };
 
-const getData = async (modelName, filter, includes) => {
-  const data = await modelName.findAll({
-    where: filter ? filter : null,
-    include: includes ? includes : null,
-    
-  });
-  console.log(data);
-  
+const getData = async (modelName, filter, includes, options = {}) => {
+  const queryOptions = {
+    where: filter || null,
+    ...options,
+  };
+
+  // If includes is provided and options doesn't override it
+  if (includes && !options.include) {
+    queryOptions.include = includes;
+  }
+
+  const data = await modelName.findAll(queryOptions);
   return data;
 };
 
-const getPaginatedData = async (modelName, filter, includes) => {
-  const data = await modelName.findAndCountAll({
+const getPaginatedData = async (modelName, filter, includes, options = {}) => {
+  const queryOptions = {
     ...filter,
-    include: includes ? includes : null,
-    raw: false,
-    attributes: { exclude: ["password"] },
-    subquery: false,
-  });
+    ...options,
+  };
+
+  // If includes is provided and options doesn't override it
+  if (includes && !options.include) {
+    queryOptions.include = includes;
+  }
+  const data = await modelName.findAndCountAll(queryOptions);
   const totalPages = Math.ceil(data.count / filter.limit);
-  
+
   return {
     count: data.count, // Total count of records
     rows: data.rows,
     pagination: {
-      totalPages,        // Total number of pages
+      totalPages, // Total number of pages
       currentPage: filter.page || 1, // Current page
       limit: filter.limit, // Records per page
     },
@@ -132,12 +138,10 @@ const generateExcel = async (
 
       headerRow.commit();
     }
- 
-   
-    const saveDir = path.join(__dirname, '..', 'public', 'downloads');
+
+    const saveDir = path.join(__dirname, "..", "public", "downloads");
 
     console.log(saveDir);
-    
 
     if (!fs.existsSync(saveDir)) {
       fs.mkdirSync(saveDir, { recursive: true }); // Ensure the entire path is created
@@ -146,39 +150,34 @@ const generateExcel = async (
     const filePath = path.join(saveDir, `${fileName}.xlsx`);
 
     console.log(filePath);
-    
 
     await workbook.xlsx.writeFile(filePath);
 
     const downloadLink = `http://localhost:8000/downloads/${fileName}.xlsx`;
 
     return downloadLink;
-
-
   } catch (error) {
     console.error("Error in generateExcel:", error);
     throw error;
   }
 };
 
-
-
-const handleFileUpload = async(files)=>{
+const handleFileUpload = async (files) => {
   try {
     if (!files || Object.keys(files).length === 0) {
       return { error: "No files were uploaded." };
     }
-     // Create uploads directory if it doesn't exist
-     const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
-     if (!fs.existsSync(uploadDir)) {
-       fs.mkdirSync(uploadDir, { recursive: true });
-     }
+    // Create uploads directory if it doesn't exist
+    const uploadDir = path.join(__dirname, "..", "public", "uploads");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
-     const processFile = (file) => {
+    const processFile = (file) => {
       const originalName = file.originalname;
       const ext = path.extname(originalName);
       const nameWithoutExt = path.basename(originalName, ext);
-      
+
       // Check if file exists and append timestamp if needed
       let finalFilename = originalName;
       if (fs.existsSync(path.join(uploadDir, originalName))) {
@@ -193,28 +192,26 @@ const handleFileUpload = async(files)=>{
         filename: finalFilename,
         path: `/uploads/${finalFilename}`,
         size: file.size,
-        mimetype: file.mimetype
+        mimetype: file.mimetype,
       };
     };
     if (Array.isArray(files)) {
       return files.map(processFile);
-          
-    }else{
+    } else {
       return processFile(files);
     }
-    
   } catch (error) {
-    console.error('Error handling file upload:', error);
+    console.error("Error handling file upload:", error);
     throw error;
   }
-}
+};
 
 const createDataWithFiles = async (modelName, data, files) => {
   try {
     // Handle File Upload FIrst
     const fileData = await modelName.handleFileUpload(files);
     // Merge data with fileData
-    const mergedData = { ...data,  files: fileData};
+    const mergedData = { ...data, files: fileData };
     // Create record with db
     const result = await modelName.create(mergedData);
     return result;
@@ -224,8 +221,7 @@ const createDataWithFiles = async (modelName, data, files) => {
   }
 };
 
-
-const getCounts = async (model,groupBy,whereClause={},include=[])=>{
+const getCounts = async (model, groupBy, whereClause = {}, include = []) => {
   try {
     const counts = await model.findAll({
       attributes: [
@@ -245,11 +241,7 @@ const getCounts = async (model,groupBy,whereClause={},include=[])=>{
     console.error("Error in getCounts:", error);
     throw error;
   }
-
-}
-
-
-
+};
 
 module.exports = {
   getData,
@@ -261,5 +253,5 @@ module.exports = {
   generateExcel,
   handleFileUpload,
   createDataWithFiles,
-  getCounts
+  getCounts,
 };

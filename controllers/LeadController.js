@@ -56,11 +56,12 @@ const save = async (req, res) => {
         { model: Occupation },
       ],
     });
-    sendLeadNotification(leadWithDetails, "created")
-    .catch(error => console.error('Notification error:', error));
+    sendLeadNotification(leadWithDetails, "created").catch((error) =>
+      console.error("Notification error:", error)
+    );
 
-  // Return response immediately
-  return sendResponse(res, 201, data);
+    // Return response immediately
+    return sendResponse(res, 201, data);
   } catch (error) {
     sendResponse(res, 400, null, error);
   }
@@ -68,8 +69,6 @@ const save = async (req, res) => {
 
 //* Fetch all leads by pagination
 const findAllPaginatedLeads = async (req, res) => {
-  
-
   try {
     let { limit, page, ...filters } = req.query;
     limit = parseInt(limit, 10) || 10;
@@ -83,27 +82,39 @@ const findAllPaginatedLeads = async (req, res) => {
       where: { active: true, ...filters },
     };
 
-    const includes = [
-      {
-        model: BusinessUnit,
-        attributes: ["name"],
+    const options = {
+      attributes: {
+        exclude: ["password", "created_by_user_id"],
+        include: [
+          [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+          [Sequelize.col("Occupation.name"), "position"],
+          [Sequelize.col("LeadStatus.name"), "lead_status_name"],
+        ],
       },
-      {
-        model: Occupation,
-        attributes: ["name"],
-      },
-      {
-        model: User,
-        as: "createdLeads",
-        attributes: ["id", "email", "staff_name"],
-      },
-      {
-        model: LeadStatus,
-        attributes: ["id", "name"],
-      },
-    ];
+      include: [
+        {
+          model: BusinessUnit,
+          attributes: [], // Empty array means don't include any columns from this model
+        },
+        {
+          model: Occupation,
+          attributes: [],
+        },
+        {
+          model: User,
+          as: "createdLeads",
+          attributes: [],
+        },
+        {
+          model: LeadStatus,
+          attributes: [],
+        },
+      ],
+      raw: true, // Automatically flattens nested objects
+      subquery: false,
+    };
 
-    const data = await getPaginatedData(Lead, filter, includes);
+    const data = await getPaginatedData(Lead, filter, null, options);
 
     sendResponse(res, 200, data);
   } catch (error) {
@@ -115,22 +126,32 @@ const findAllPaginatedLeads = async (req, res) => {
 const findLeadById = async (req, res) => {
   try {
     const id = req.params.id;
-    const includes = [
-      {
-        model: BusinessUnit,
-        attributes: ["id", "name"],
+    const options = {
+      attributes: {
+        exclude: ["password", "created_by_user_id"],
+        include: [
+          [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+          [Sequelize.col("Occupation.name"), "position"],
+          [Sequelize.col("LeadStatus.name"), "lead_status_name"],
+        ],
       },
-      {
-        model: Occupation,
-        attributes: ["id", "name"],
-      },
-
-      {
-        model: LeadStatus,
-        attributes: ["id", "name"],
-      },
-    ];
-    const data = await getData(Lead, { id: id }, includes);
+      include: [
+        {
+          model: BusinessUnit,
+          attributes: [], // Don't include any columns from the BusinessUnit model in results
+        },
+        {
+          model: Occupation,
+          attributes: [],
+        },
+        {
+          model: LeadStatus,
+          attributes: [],
+        },
+      ],
+      raw: true, // Automatically flattens nested objects
+    };
+    const data = await getData(Lead, { id: id }, null, options);
     sendResponse(res, 200, data);
   } catch (error) {
     sendResponse(res, 404, null, error.message);
@@ -143,7 +164,6 @@ const updateLead = async (req, res) => {
     const id = req.params.id;
     const { user_id, ...updateFields } = req.body;
 
-    // Fetch the user to get the staff name
     const user = await User.findOne({
       where: { id: user_id },
       attributes: ["staff_name"],
@@ -154,13 +174,12 @@ const updateLead = async (req, res) => {
       return sendResponse(res, 404, null, "User not found");
     }
 
-    // Add updated_by_dn to the update fields
-    updateFields.updated_by_dn = user.staff_name; 
-    updateFields.updated_by_email = user.email; 
+ 
+    updateFields.updated_by_dn = user.staff_name;
+    updateFields.updated_by_email = user.email;
 
     const data = await updatedData(Lead, { id: id }, updateFields);
 
-    // Fetch lead with associations for notification
     const leadWithDetails = await Lead.findOne({
       where: { id: id },
       include: [
@@ -170,8 +189,9 @@ const updateLead = async (req, res) => {
       ],
     });
 
-    sendLeadNotification(leadWithDetails, "updated")
-      .catch(error => console.error('Notification error:', error));
+    sendLeadNotification(leadWithDetails, "updated").catch((error) =>
+      console.error("Notification error:", error)
+    );
 
     sendResponse(res, 200, data, null, "successfully updated!");
   } catch (error) {
@@ -248,26 +268,40 @@ const findAllLeadsByBusinessUnit = async (req, res) => {
       offset,
       where: { active: true, business_unit_id: businessUnitId, ...filters },
     };
-    const includes = [
-      {
-        model: BusinessUnit,
-        attributes: ["name"],
+    const options = {
+      attributes: {
+        exclude: ["password", "created_by_user_id"],
+        include: [
+          [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+          [Sequelize.col("Occupation.name"), "position"],
+          [Sequelize.col("LeadStatus.name"), "lead_status_name"],
+          // [Sequelize.col('createdLeads.email'), 'created_by_email'],
+          // [Sequelize.col('createdLeads.staff_name'), 'created_by_staff_name']
+        ],
       },
-      {
-        model: Occupation,
-        attributes: ["name"],
-      },
-      {
-        model: User,
-        as: "createdLeads",
-        attributes: ["id", "email", "staff_name"],
-      },
-      {
-        model: LeadStatus,
-        attributes: ["id", "name"],
-      },
-    ];
-    const data = await getPaginatedData(Lead, filter, includes);
+      include: [
+        {
+          model: BusinessUnit,
+          attributes: [], // Empty array means don't include any columns from this model
+        },
+        {
+          model: Occupation,
+          attributes: [],
+        },
+        {
+          model: User,
+          as: "createdLeads",
+          attributes: [],
+        },
+        {
+          model: LeadStatus,
+          attributes: [],
+        },
+      ],
+      raw: true, // Automatically flattens nested objects
+      subquery: false,
+    };
+    const data = await getPaginatedData(Lead, filter, null, options);
     sendResponse(res, 200, data);
   } catch (error) {
     sendResponse(res, 404, null, error.message);
@@ -380,8 +414,8 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
 
     // First, get all possible lead statuses
     const allLeadStatuses = await LeadStatus.findAll({
-      attributes: ['id', 'name'],
-      raw: true
+      attributes: ["id", "name"],
+      raw: true,
     });
 
     // Then get the counts for the specific business unit
@@ -415,7 +449,7 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
     let businessUnitInfo = {
       id: parseInt(businessUnitId),
       business_unit_name: null,
-      status_counts: []
+      status_counts: [],
     };
 
     // If we have data, extract the business unit info
@@ -424,25 +458,27 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
       businessUnitInfo.business_unit_name = leadCounts[0].business_unit_name;
     } else {
       // If no leads found, try to get the business unit name
-      const businessUnit = await BusinessUnit.findByPk(businessUnitId, { raw: true });
+      const businessUnit = await BusinessUnit.findByPk(businessUnitId, {
+        raw: true,
+      });
       if (businessUnit) {
         businessUnitInfo.business_unit_name = businessUnit.name;
       }
     }
-    
+
     // Convert lead counts to a map for easier lookup
     const statusCountMap = {};
-    leadCounts.forEach(item => {
+    leadCounts.forEach((item) => {
       statusCountMap[item.status] = parseInt(item.count);
     });
-    
+
     // Create status_counts array with all possible statuses
-    businessUnitInfo.status_counts = allLeadStatuses.map(status => ({
+    businessUnitInfo.status_counts = allLeadStatuses.map((status) => ({
       id: status.id,
       lead_status: status.name,
-      count: statusCountMap[status.name] || 0
+      count: statusCountMap[status.name] || 0,
     }));
-    
+
     sendResponse(res, 200, businessUnitInfo);
   } catch (error) {
     sendResponse(res, 404, null, error.message);
@@ -476,24 +512,59 @@ const getLeadByBuAndStatus = async (req, res) => {
       whereClause.lead_status_id = statusId;
     }
 
-    // Define includes
-    const includes = [
-      {
-        model: BusinessUnit,
-        attributes: ["name"],
-        required: true,
+    // // Define includes
+    // const includes = [
+    //   {
+    //     model: BusinessUnit,
+    //     attributes: ["name"],
+    //     required: true,
+    //   },
+    //   {
+    //     model: Occupation,
+    //     attributes: ["name"],
+    //     required: true,
+    //   },
+    //   {
+    //     model: LeadStatus,
+    //     attributes: ["id", "name"],
+    //     required: true,
+    //   },
+    // ];
+
+    const options = {
+      where: whereClause,
+      limit,
+      offset,
+      page,
+      order: [["created_at", "DESC"]],
+      attributes: {
+        exclude: ["password", "created_by_user_id"],
+        include: [
+          [Sequelize.col("BusinessUnit.name"), "business_unit_name"],
+          [Sequelize.col("Occupation.name"), "occupation_name"],
+          [Sequelize.col("LeadStatus.name"), "lead_status_name"],
+        ],
       },
-      {
-        model: Occupation,
-        attributes: ["name"],
-        required: true,
-      },
-      {
-        model: LeadStatus,
-        attributes: ["id", "name"],
-        required: true,
-      },
-    ];
+      include: [
+        {
+          model: BusinessUnit,
+          attributes: [],
+          required: true,
+        },
+        {
+          model: Occupation,
+          attributes: [],
+          required: true,
+        },
+        {
+          model: LeadStatus,
+          attributes: [],
+          required: true,
+        },
+      ],
+      raw: true, // Automatically flattens nested objects
+      distinct: true, // Ensures correct count with joins
+    };
     const filter = {
       where: whereClause, //active: true
       limit: limit,
@@ -501,7 +572,7 @@ const getLeadByBuAndStatus = async (req, res) => {
       page: page,
       order: [["created_at", "DESC"]],
     };
-    const result = await getPaginatedData(Lead, filter, includes);
+    const result = await getPaginatedData(Lead, filter, null, options);
     sendResponse(res, 200, result);
   } catch (error) {
     sendResponse(res, 404, null, error.message);

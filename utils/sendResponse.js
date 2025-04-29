@@ -35,16 +35,24 @@ function sendResponse(
     message: message,
   };
 
-  if (data) {
-    response.data = data;
+  if (data !== null) {
+    if (Array.isArray(data) && data.length === 1) {
+      response.data = data[0];
+    } else if (data.rows && data.count !== undefined && data.pagination) {
+      response.data = {
+        ...data,
+        rows: data.rows.length === 1 ? data.rows[0] : data.rows,
+      };
+    } else {
+      response.data = data;
+    }
   }
   if (error) {
-    
     if (
       error.name === "SequelizeValidationError" ||
       error.name === "SequelizeUniqueConstraintError"
     ) {
-      statusCode = 422; 
+      statusCode = 422;
       response.success = false;
       response.message = "Validation error";
       response.errors = error.errors.map((err) => ({
