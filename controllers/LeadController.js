@@ -438,6 +438,7 @@ const getLeadStatusCountByBusinessUnit = async (req, res) => {
     
     // Create status_counts array with all possible statuses
     businessUnitInfo.status_counts = allLeadStatuses.map(status => ({
+      id: status.id,
       lead_status: status.name,
       count: statusCountMap[status.name] || 0
     }));
