@@ -512,24 +512,7 @@ const getLeadByBuAndStatus = async (req, res) => {
       whereClause.lead_status_id = statusId;
     }
 
-    // // Define includes
-    // const includes = [
-    //   {
-    //     model: BusinessUnit,
-    //     attributes: ["name"],
-    //     required: true,
-    //   },
-    //   {
-    //     model: Occupation,
-    //     attributes: ["name"],
-    //     required: true,
-    //   },
-    //   {
-    //     model: LeadStatus,
-    //     attributes: ["id", "name"],
-    //     required: true,
-    //   },
-    // ];
+  
 
     const options = {
       where: whereClause,
