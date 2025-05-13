@@ -1,26 +1,30 @@
 const TelegramBot = require("node-telegram-bot-api");
-require('dotenv').config();
+require("dotenv").config();
 const telegramConfig = require("../config/telegramConfig.js");
 
 // Initialize bot with your token
 
-
-const TELEGRAM_BOT_TOKEN = '8090911281:AAExxDME5QNOiXRWVZcHtO_QfL0n9F33oa4';
+const TELEGRAM_BOT_TOKEN = "8090911281:AAExxDME5QNOiXRWVZcHtO_QfL0n9F33oa4";
 // Replace with your team's chat ID
-const TELEGRAM_CHAT_ID = '-1002600392570';
+const TELEGRAM_CHAT_ID = "-1002600392570";
+
+// console.log(telegramConfig.BOT_TOKEN, telegramConfig.CHAT_ID);
+
 
 // Validate bot token and chat ID
-let bot;
-try {
-  if (telegramConfig.validateConfig()) {
-    bot = new TelegramBot(telegramConfig.BOT_TOKEN, { polling: false });
-  }
-} catch (error) {
-  console.error('Failed to initialize Telegram bot:', error);
-}
+// let bot;
+// try {
+//   if (telegramConfig.validateConfig()) {
+//     bot = new TelegramBot(telegramConfig.BOT_TOKEN, { polling: false });
+//   }
+// } catch (error) {
+//   console.error("Failed to initialize Telegram bot:", error);
+// }
 
 const sendLeadNotification = async (lead, action = "created") => {
   try {
+     const { BOT_TOKEN, CHAT_ID } = await telegramConfig.getConfig();
+    const bot = new TelegramBot(BOT_TOKEN, { polling: false });
     const message = `
 🔔 Lead ${action.toUpperCase()}
 
@@ -36,7 +40,7 @@ Created by Email: ${lead.created_by_email}
 ${action === "updated" ? `Updated by: ${lead.updated_by_dn}` : ""}
 ${action === "updated" ? `Updated by Email: ${lead.updated_by_email}` : ""}
         `;
-    await bot.sendMessage(telegramConfig.CHAT_ID, message);
+    await bot.sendMessage(CHAT_ID, message);
     return true;
   } catch (error) {
     return false;

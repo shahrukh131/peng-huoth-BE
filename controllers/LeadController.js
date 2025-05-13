@@ -166,7 +166,7 @@ const updateLead = async (req, res) => {
 
     const user = await User.findOne({
       where: { id: user_id },
-      attributes: ["staff_name"],
+      attributes: ["staff_name","email"],
       raw: true,
     });
 
@@ -177,6 +177,9 @@ const updateLead = async (req, res) => {
  
     updateFields.updated_by_dn = user.staff_name;
     updateFields.updated_by_email = user.email;
+
+    console.log("Update Fields:", user);
+    
 
     const data = await updatedData(Lead, { id: id }, updateFields);
 

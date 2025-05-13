@@ -1,8 +1,6 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
-const CoreModel = require('./coreModel');
+"use strict";
+const { Model } = require("sequelize");
+const CoreModel = require("./coreModel");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -13,80 +11,89 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       User.hasMany(models.Lead, {
-        foreignKey: 'created_by_user_id',
-        as: 'createdLeads'
-      })
+        foreignKey: "created_by_user_id",
+        as: "createdLeads",
+      });
+
+      User.belongsToMany(models.Role, {
+        through: "UserRoles",
+        foreignKey: "user_id",
+        otherKey: "role_id",
+        as: "roles",
+      });
     }
   }
-  User.init({
-    ...CoreModel(DataTypes),
-    staff_id: DataTypes.STRING,
-    staff_name: {
-      type: DataTypes.STRING,
-      allowNull: true
-    }
-    ,
-    email: {
-      type:DataTypes.STRING,
-      allowNull:false,
-      unique: {
-        args: true,
-        msg: 'The Email must be unique.', // Custom error message
+  User.init(
+    {
+      ...CoreModel(DataTypes),
+      staff_id: DataTypes.STRING,
+      staff_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
-      validate: {
-        notNull: {
-          msg: 'Please enter your email'
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: {
+          args: true,
+          msg: "The Email must be unique.", // Custom error message
         },
-        isUnique: async function (value) {
-          const user = await User.findOne({ where: { email: value } });
-          if (user) {
-            throw new Error('The Email is already used.'); // Custom error message
-          }
+        validate: {
+          notNull: {
+            msg: "Please enter your email",
+          },
+          isUnique: async function (value) {
+            const user = await User.findOne({ where: { email: value } });
+            if (user) {
+              throw new Error("The Email is already used."); // Custom error message
+            }
+          },
         },
-      }
-    },
-    password: DataTypes.STRING,
-    phoneNumber: {
-      type:DataTypes.STRING,
-      allowNull:false,
-      unique: {
-        args: true,
-        msg: 'The Phone Number must be unique.', // Custom error message
       },
-      validate: {
-        notNull: {
-          msg: 'Please enter your phoneNumber'
+      password: DataTypes.STRING,
+      phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: {
+          args: true,
+          msg: "The Phone Number must be unique.", // Custom error message
         },
-        isUnique: async function (value) {
-          const user = await User.findOne({ where: { phoneNumber: value } });
-          if (user) {
-            throw new Error('The phoneNumber is already used.'); // Custom error message
-          }
+        validate: {
+          notNull: {
+            msg: "Please enter your phoneNumber",
+          },
+          isUnique: async function (value) {
+            const user = await User.findOne({ where: { phoneNumber: value } });
+            if (user) {
+              throw new Error("The phoneNumber is already used."); // Custom error message
+            }
+          },
         },
-      }
+      },
+      otp: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      otpExpiry: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      isRegistered: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      isPhoneVerfied: DataTypes.BOOLEAN,
+      profile_image: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
-    otp: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    otpExpiry: {
-      type: DataTypes.DATE,
-      allowNull: true
-    },
-    isRegistered: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
-    },
-    isPhoneVerfied: DataTypes.BOOLEAN,
-    profile_image: {
-      type: DataTypes.STRING,
-      allowNull: true
+    {
+      sequelize,
+      modelName: "User",
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     }
-  }, {
-    sequelize,
-    modelName: 'User',
-    createdAt: "created_at",
-    updatedAt: "updated_at",
-  });
+  );
   return User;
 };

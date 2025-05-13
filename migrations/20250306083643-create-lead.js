@@ -24,6 +24,9 @@ module.exports = {
       gender:{
         type: Sequelize.ENUM('Male', 'Female', 'Other')
       },
+      remarks: {
+        type: Sequelize.TEXT
+      },
       business_unit_id: {
         type: Sequelize.INTEGER
       },

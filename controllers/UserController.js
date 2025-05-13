@@ -82,7 +82,7 @@ const updateUser = async (req, res) => {
      if (!currentUser || currentUser.length === 0) {
        return sendResponse(res, 400, null, "User not found.");
      }
-    //  console.log(currentUser[0].profile_image);
+  
      
 
     // Hash password only if it's provided
