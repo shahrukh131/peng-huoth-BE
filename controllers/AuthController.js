@@ -42,7 +42,7 @@ const login = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       // return sendResponse(res, 401, null, "Invalid password");
-      return  sendResponse(res, 400, null, null, "Invalid password");
+      return sendResponse(res, 400, null, null, "Invalid password");
     }
     const token = jwt.sign(
       {
@@ -61,7 +61,7 @@ const login = async (req, res) => {
 };
 
 const initiateRegister = async (req, res) => {
-  const {staff_id, staff_name, email, phoneNumber } = req.body;
+  const { staff_id, staff_name, email, phoneNumber } = req.body;
 
   try {
     let user = await User.findOne({ where: { email } });
@@ -71,8 +71,14 @@ const initiateRegister = async (req, res) => {
         return sendResponse(res, 400, null, "User already registered");
       }
       const currentTime = Date.now();
-      if (user.otp &&user.otpExpiry > currentTime) {
-        return sendResponse(res, 200, { otp: user.otp, otpExpiry: user.otpExpiry }, null, "OTP already sent");
+      if (user.otp && user.otpExpiry > currentTime) {
+        return sendResponse(
+          res,
+          200,
+          { otp: user.otp, otpExpiry: user.otpExpiry },
+          null,
+          "OTP already sent"
+        );
       }
     } else {
       user = await User.create({
@@ -82,7 +88,6 @@ const initiateRegister = async (req, res) => {
         phoneNumber,
       });
     }
-
 
     // Generate OTP and its expiry time
     const otp = generateOTP();
@@ -117,7 +122,8 @@ const verifyOTP = async (req, res) => {
       return sendResponse(res, 400, null, "Invalid OTP");
     }
 
-    if (user.otpExpiry < Date.now()) { // Check if OTP has expired
+    if (user.otpExpiry < Date.now()) {
+      // Check if OTP has expired
       return sendResponse(res, 400, null, "OTP has expired");
     }
 
@@ -130,13 +136,13 @@ const verifyOTP = async (req, res) => {
   } catch (error) {
     sendResponse(res, 500, null, error.message);
   }
-}
+};
 
 const completeRegistration = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ where: { email } }); 
+    const user = await User.findOne({ where: { email } });
 
     const hashedPassword = await generateHashedPassword(password);
 
@@ -147,11 +153,52 @@ const completeRegistration = async (req, res) => {
     user.otpExpiry = null;
     await user.save();
     sendResponse(res, 200, user, null, "User registered successfully");
-
-    
   } catch (error) {
     sendResponse(res, 500, null, error.message);
   }
-}
+};
 
-module.exports = { register, login, initiateRegister,verifyOTP,completeRegistration };
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const userId = req.user.id;
+
+    if (newPassword !== confirmPassword) {
+      return sendResponse(res, 400, null, "Passwords do not match");
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return sendResponse(res, 404, null, "User not found");
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return sendResponse(res, 400, null, "Invalid current password");
+    }
+
+    const hashedPassword = await generateHashedPassword(newPassword);
+     await User.update(
+      { 
+        password: hashedPassword, 
+        updated_at: new Date() 
+      },
+      {
+        where: { id: userId }
+      }
+    );
+
+     return sendResponse(res, 200, null, null, "Password updated successfully");
+  } catch (error) {
+    return sendResponse(res, 500, null, error.message);
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  initiateRegister,
+  verifyOTP,
+  completeRegistration,
+  changePassword,
+};

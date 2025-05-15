@@ -120,8 +120,11 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to Peng Huoth Application" });
 });
 
-app.post('send-push-notification', async (req, res) => {
+app.post('/send-push-notification', async (req, res) => {
   const { token, title, body } = req.body;
+
+  console.log(token, title, body);
+  
 
   const message = {
     notification: {
