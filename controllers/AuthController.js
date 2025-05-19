@@ -33,7 +33,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,fcm_token } = req.body;
   try {
     const user = await User.findOne({ where: { email: email } });
     if (!user) {
@@ -50,6 +50,7 @@ const login = async (req, res) => {
         email: user.email,
         staff_id: user.staff_id,
         staff_name: user.staff_name,
+        fcm_token
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }

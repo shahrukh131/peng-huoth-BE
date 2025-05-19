@@ -131,9 +131,12 @@ app.post('/send-push-notification', async (req, res) => {
     },
     token
   };
+  
 
   try {
     const response = await admin.messaging().send(message);
+    console.log('Push notification sent successfully:', response);
+    
     res.status(200).json({ success: true, message: 'Notification sent!', response });
   } catch (error) {
     console.error('Error sending notification:', error);
