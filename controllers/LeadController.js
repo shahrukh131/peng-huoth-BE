@@ -11,6 +11,7 @@ const {
 } = require("../utils/GenericMethods");
 const { Sequelize } = require("sequelize");
 const { sendLeadNotification } = require("../utils/telegramNotification");
+const { sendPushNotification } = require("../utils/pushNotification");
 
 const save = async (req, res) => {
   //* Saves Lead into the database.
@@ -23,6 +24,7 @@ const save = async (req, res) => {
     remarks,
     user_id,
     lead_status_id,
+    deviceToken,
   } = req.body;
   try {
     const user = await User.findOne({
@@ -56,6 +58,16 @@ const save = async (req, res) => {
         { model: Occupation },
       ],
     });
+     if (!deviceToken) {
+    return sendResponse(res, 400, null, "Device token is required.");
+  }
+
+    await sendPushNotification(
+      deviceToken,
+      "Lead Created",
+      `Lead for ${data.customer_name} has been created.`
+    );
+
     sendLeadNotification(leadWithDetails, "created").catch((error) =>
       console.error("Notification error:", error)
     );
@@ -162,11 +174,11 @@ const findLeadById = async (req, res) => {
 const updateLead = async (req, res) => {
   try {
     const id = req.params.id;
-    const { user_id, ...updateFields } = req.body;
+    const { user_id, deviceToken, ...updateFields } = req.body;
 
     const user = await User.findOne({
       where: { id: user_id },
-      attributes: ["staff_name","email"],
+      attributes: ["staff_name", "email"],
       raw: true,
     });
 
@@ -174,12 +186,10 @@ const updateLead = async (req, res) => {
       return sendResponse(res, 404, null, "User not found");
     }
 
- 
     updateFields.updated_by_dn = user.staff_name;
     updateFields.updated_by_email = user.email;
 
     console.log("Update Fields:", user);
-    
 
     const data = await updatedData(Lead, { id: id }, updateFields);
 
@@ -191,6 +201,14 @@ const updateLead = async (req, res) => {
         { model: Occupation },
       ],
     });
+    if (!deviceToken) {
+       return sendResponse(res, 400, null, "Device token is required.");
+    }
+    await sendPushNotification(
+      deviceToken,
+      "Lead Updated",
+      `Lead for ${leadWithDetails.customer_name} has been updated.`
+    );
 
     sendLeadNotification(leadWithDetails, "updated").catch((error) =>
       console.error("Notification error:", error)
@@ -463,8 +481,6 @@ const getLeadByBuAndStatus = async (req, res) => {
     if (statusId) {
       whereClause.lead_status_id = statusId;
     }
-
-  
 
     const options = {
       where: whereClause,
