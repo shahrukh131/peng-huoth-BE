@@ -1,4 +1,11 @@
-const { Lead, User, BusinessUnit, LeadStatus, Occupation } = require("@models");
+const {
+  Lead,
+  User,
+  BusinessUnit,
+  LeadStatus,
+  Occupation,
+  Notification,
+} = require("@models");
 const sendResponse = require("@utils/sendResponse");
 
 const {
@@ -58,14 +65,21 @@ const save = async (req, res) => {
         { model: Occupation },
       ],
     });
-     if (!deviceToken) {
-    return sendResponse(res, 400, null, "Device token is required.");
-  }
+    if (!deviceToken) {
+      return sendResponse(res, 400, null, "Device token is required.");
+    }
 
-    await sendPushNotification(
+    const notification = await Notification.create({
+      user_id: req.user.id,
+      lead_id: data.id,
+      title: `${leadWithDetails.BusinessUnit.name} Lead Submitted`,
+      body: `New lead created for ${data.customer_name}`,
+    });
+
+     await sendPushNotification(
       deviceToken,
-      "Lead Created",
-      `Lead for ${data.customer_name} has been created.`
+      notification.title,
+      notification.body
     );
 
     sendLeadNotification(leadWithDetails, "created").catch((error) =>
@@ -189,8 +203,6 @@ const updateLead = async (req, res) => {
     updateFields.updated_by_dn = user.staff_name;
     updateFields.updated_by_email = user.email;
 
-    console.log("Update Fields:", user);
-
     const data = await updatedData(Lead, { id: id }, updateFields);
 
     const leadWithDetails = await Lead.findOne({
@@ -202,12 +214,18 @@ const updateLead = async (req, res) => {
       ],
     });
     if (!deviceToken) {
-       return sendResponse(res, 400, null, "Device token is required.");
+      return sendResponse(res, 400, null, "Device token is required.");
     }
+    const notification =await Notification.create({
+      user_id: req.user.id,
+      lead_id: id,
+      title: `${leadWithDetails.BusinessUnit.name} Lead Updated`,
+      body: `Lead for ${leadWithDetails.customer_name} has been updated`,
+    });
     await sendPushNotification(
       deviceToken,
-      "Lead Updated",
-      `Lead for ${leadWithDetails.customer_name} has been updated.`
+      notification.title,
+      notification.body
     );
 
     sendLeadNotification(leadWithDetails, "updated").catch((error) =>
