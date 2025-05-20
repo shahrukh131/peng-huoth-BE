@@ -6,21 +6,6 @@ const getNotifications = async (req, res) => {
     const userId = req.user.id; // Get user ID from JWT token
     const notifications = await Notification.findAll({
       where: { user_id: userId },
-      include: [
-        {
-          model: Lead,
-          include:[{
-            model:BusinessUnit,
-            attributes: ["id", "name"],
-          },
-          {
-            model:LeadStatus,
-            attributes: ["id", "name"],
-          }],
-          
-        },
-
-      ],
       order: [["created_at", "DESC"]]
     });
 
@@ -46,4 +31,20 @@ const markAsRead = async (req, res) => {
   }
 };
 
-module.exports = { getNotifications, markAsRead };
+// notification delete
+const deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    await Notification.destroy({
+      where: { id, user_id: userId },
+    });
+
+    sendResponse(res, 200, null, "Notification deleted successfully");
+  } catch (error) {
+    sendResponse(res, 500, null, error.message);
+  }
+};
+
+module.exports = { getNotifications, markAsRead,deleteNotification };

@@ -76,11 +76,24 @@ const save = async (req, res) => {
       body: `New lead created for ${data.customer_name}`,
     });
 
-     await sendPushNotification(
-      deviceToken,
-      notification.title,
-      notification.body
-    );
+    if (deviceToken) {
+       const pushResult = await sendPushNotification(
+        deviceToken,
+        notification.title,
+        notification.message
+      );
+
+      if (pushResult.shouldRemoveToken) {
+        // TODO: Update user's device token or mark it as invalid
+        console.warn(`Invalid FCM token for user ${req.user.id}`);
+      }
+    }
+
+    //  await sendPushNotification(
+    //   deviceToken,
+    //   notification.title,
+    //   notification.body
+    // );
 
     sendLeadNotification(leadWithDetails, "created").catch((error) =>
       console.error("Notification error:", error)
@@ -222,11 +235,25 @@ const updateLead = async (req, res) => {
       title: `${leadWithDetails.BusinessUnit.name} Lead Updated`,
       body: `Lead for ${leadWithDetails.customer_name} has been updated`,
     });
-    await sendPushNotification(
-      deviceToken,
-      notification.title,
-      notification.body
-    );
+
+    if (deviceToken) {
+      const pushResult = await sendPushNotification(
+        deviceToken,
+        notification.title,
+        notification.message
+      );
+
+      if (pushResult.shouldRemoveToken) {
+        // TODO: Update user's device token or mark it as invalid
+        console.warn(`Invalid FCM token for user ${req.user.id}`);
+      }
+    }
+
+    // await sendPushNotification(
+    //   deviceToken,
+    //   notification.title,
+    //   notification.body
+    // );
 
     sendLeadNotification(leadWithDetails, "updated").catch((error) =>
       console.error("Notification error:", error)

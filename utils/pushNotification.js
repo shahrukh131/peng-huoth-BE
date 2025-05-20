@@ -23,6 +23,15 @@ const sendPushNotification = async (token, title, body) => {
     console.log('Push notification sent successfully:', response);
     return { success: true, response };
   } catch (error) {
+      if (error.code === 'messaging/invalid-registration-token' ||
+        error.code === 'messaging/registration-token-not-registered') {
+      console.error('Invalid or expired FCM token:', token);
+      return { 
+        success: false, 
+        error: 'Invalid or expired device token',
+        shouldRemoveToken: true 
+      };
+    }
     console.error('Error sending push notification:', error);
     return { success: false, error: error.message };
   }
