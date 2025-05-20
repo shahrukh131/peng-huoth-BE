@@ -22,11 +22,12 @@ const markAsRead = async (req, res) => {
 
     await Notification.update(
       { is_read: true },
-      { where: { id, user_id: userId } }
+      { where: { id, user_id: userId }, limit: 1 }
     );
-
-    sendResponse(res, 200, null, "Notification marked as read");
+     sendResponse(res, 200, null, null, " updated successfully");
   } catch (error) {
+    console.log(error);
+    
     sendResponse(res, 500, null, error.message);
   }
 };
